@@ -8,6 +8,10 @@ TOY_FITNESS_DATA_COMPLETE = pkg_resources.resource_filename(
     __name__, "toy_fitness_data_01_complete.csv"
 )
 
+TOY_FITNESS_DATA_COMPLETE_NOCONF = pkg_resources.resource_filename(
+    __name__, "toy_fitness_data_01_complete_noconf.csv"
+)
+
 TOY_FITNESS_DATA_TRUNCATED = pkg_resources.resource_filename(
     __name__, "toy_fitness_data_02_truncated_25.csv"
 )
