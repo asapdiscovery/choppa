@@ -57,6 +57,16 @@ class FitnessFactory(BaseModel):
             fitness_colname,
             confidence_colname,
         ]]
+
+        # check that there aren't any NaNs and that fitness (and confidence) data is scalar
+        if fitness_df.isnull().values.any():
+            raise ValueError(f"Found missing values in input CSV: {fitness_df[fitness_df.isnull().any(axis=1)]}")
+        if len(fitness_df[pd.to_numeric(fitness_df[fitness_colname], errors='coerce').isnull()]) > 0:
+            raise ValueError(f"Found non-numeric fitness values in input CSV: {fitness_df[pd.to_numeric(fitness_df[fitness_colname], errors='coerce').isnull()]}")
+        if confidence_colname is not None:
+            if len(fitness_df[pd.to_numeric(fitness_df[confidence_colname], errors='coerce').isnull()]) > 0:
+                raise ValueError(f"Found non-numeric confidence values in input CSV: {fitness_df[pd.to_numeric(fitness_df[confidence_colname], errors='coerce').isnull()]}")
+        
         logger.info(f"Successfully read fitness data:\n{fitness_df}")
 
         return fitness_df
@@ -64,7 +74,7 @@ class FitnessFactory(BaseModel):
     def df_to_basedict(fitness_df):
         """
         Converts a `pandas` fitness dataframe (read by `FitnessFactory.read_fitness_csv`) into
-        a fitness basedict.
+        a `fitness basedict` which is essentially just an `OrderedDict`.
         """
 
 
