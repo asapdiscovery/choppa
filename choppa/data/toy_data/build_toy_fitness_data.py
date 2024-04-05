@@ -1,5 +1,4 @@
 from Bio.PDB import PDBParser
-from Bio import SeqUtils
 import csv
 import random
 
