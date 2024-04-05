@@ -1,13 +1,16 @@
-name: test
+name: choppa
 channels:
 
   - conda-forge
-
   - defaults
+
 dependencies:
     # Base depends
   - python
   - pip
+  - pandas
+  - biopython
+  - click
 
     # Testing
   - pytest
