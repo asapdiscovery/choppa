@@ -6,7 +6,7 @@ import numpy as np
 import logging, sys
 from collections import OrderedDict
 
-logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
 class FitnessFactory():
@@ -89,7 +89,7 @@ class FitnessFactory():
             return fitness_df
         
     
-    def df_to_basedict(self):
+    def get_fitness_basedict(self):
         """
         Converts a `pandas` fitness dataframe (read by `FitnessFactory.read_fitness_csv`) into
         a `fitness basedict` which is essentially just an `OrderedDict`.
@@ -131,15 +131,10 @@ class FitnessFactory():
                 "wildtype": wt_dict,
                 "mutants": mutant_list
             }
+        
+        logger.info(f"Created fitness dictionary as `FitnessFactory` of length {len(fitness_basedict)}")
+
         return fitness_basedict
-
-         
-
-    def get_fitness_dict(self):
-        """
-        """
-
-
 
 
 class ComplexFactory():
@@ -155,5 +150,5 @@ if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_COMPLETE_NOCONF
     fitness_df = FitnessFactory(TOY_FITNESS_DATA_COMPLETE_NOCONF, 
                                     # confidence_colname="confidence"
-                                    ).df_to_basedict()
+                                    ).get_fitness_basedict()
     
