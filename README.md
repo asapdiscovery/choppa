@@ -5,7 +5,7 @@ choppa
 [![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/choppa/branch/main/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/choppa/branch/main)
 
 
-Integrated mutational and structural biology data into a concerted HTML view
+Integrated mutational and structural biology data into a concerted HTML view.
 
 ### Copyright
 
