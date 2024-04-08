@@ -136,19 +136,43 @@ class FitnessFactory():
 
         return fitness_basedict
 
+from Bio.PDB import PDBParser
 
 class ComplexFactory():
     """
     """
-    def check_validity():
-        """
-        Does some quick checks to make sure the imported PDB structure is valid.
-        """
+    def __init__(self,
+                 path_to_pdb_file: Path,
+                 ):
+        self.path_to_pdb_file = path_to_pdb_file
 
+    def remove_waters(system):
+        """[Placeholder] Returns a system with water entries removed"""
+        return system
+    
+    def extract_ligands(system):
+        """[Placeholder] Returns a system's ligands"""
+        return system
+    
+    def check_validity(self, complex):
+        """
+        [Placeholder] Does some quick checks to make sure the imported PDB structure is valid. We're
+        not doing any kind of protein prep, just whether biopython _is able to_ read the PDB
+        file and we try to figure out what entry names the solvent/ligands have (if there are any)
+        """ 
+        return complex
+
+    def load_pdb(self):
+        """
+        Loads an input PDB file 
+        """
+        complex = PDBParser(QUIET=False).get_structure("COMPLEX", self.path_to_pdb_file)
+        self.check_validity(complex)
 
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_COMPLETE_NOCONF
-    fitness_df = FitnessFactory(TOY_FITNESS_DATA_COMPLETE_NOCONF, 
-                                    # confidence_colname="confidence"
+    fitness_df = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
+                                    confidence_colname="confidence"
                                     ).get_fitness_basedict()
+    complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     
