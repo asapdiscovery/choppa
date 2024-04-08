@@ -68,10 +68,12 @@ def create_toy_fitness_csv(add_confidence=True):
 
 # write out the toy fitness dataset
 toy_fitness_data, _ = create_toy_fitness_csv()
+print("Full fitness set:", len(toy_fitness_data))
 write_toy_fitness_csv(toy_fitness_data, "toy_fitness_data_01_complete.csv")
 
 # write out the toy fitness dataset without confidence column
 toy_fitness_data, _ = create_toy_fitness_csv(add_confidence=False)
+print("Full fitness set without confidence:", len(toy_fitness_data))
 write_toy_fitness_csv(toy_fitness_data, "toy_fitness_data_01_complete_noconf.csv")
 
 # also make a toy fitness dataset that is only a section of the toy PDB so we can test alignment
@@ -80,10 +82,12 @@ truncate_length = 25
 start_index = truncate_length # we'll just shave off a few bits at the start and end.
 end_index = len(list(structure.get_residues())) - truncate_length
 truncated_toy_fitness_data = [ dat for dat in toy_fitness_data if start_index < dat[0] < end_index ]
-write_toy_fitness_csv(toy_fitness_data, f"toy_fitness_data_02_truncated_{truncate_length}.csv")
+print("Trunacted fitness set:", len(truncated_toy_fitness_data))
+write_toy_fitness_csv(truncated_toy_fitness_data, f"toy_fitness_data_02_truncated_{truncate_length}.csv")
 
 # also make a test case with multiple fragmented sections to further test alignment
 toy_fitness_data, _ = create_toy_fitness_csv()
 sections = list(range(5, 35)) + list(range(82, 110)) + list(range(130, 162))
 sectioned_toy_fitness_data = [ dat for dat in toy_fitness_data if dat[0] in sections ]
-write_toy_fitness_csv(toy_fitness_data, f"toy_fitness_data_03_sectioned.csv")
+print("Sectioned fitness set:", len(sectioned_toy_fitness_data))
+write_toy_fitness_csv(sectioned_toy_fitness_data, f"toy_fitness_data_03_sectioned.csv")
