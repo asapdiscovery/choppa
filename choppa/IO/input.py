@@ -168,6 +168,7 @@ class ComplexFactory():
         """
         complex = PDBParser(QUIET=False).get_structure("COMPLEX", self.path_to_pdb_file)
         self.check_validity(complex)
+        return complex
 
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_COMPLETE_NOCONF
