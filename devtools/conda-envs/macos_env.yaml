@@ -8,10 +8,18 @@ dependencies:
     # Base depends
   - python
   - pip
+
+  # Data workflowing
   - pandas
   - biopython
   - click
-  - pydantic
+
+  # visualizations
+  - pymol-open-source
+  - pyqt
+  - prolif
+  - logomaker
+  - jinja2
 
     # Testing
   - pytest

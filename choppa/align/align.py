@@ -150,9 +150,8 @@ if __name__ == "__main__":
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
 
-    AlignFactory(fitness_dict, complex).align_fitness()
-    # print(type(fitness_dict), type(complex))
-    # AlignFactory(fitness_dict, complex)
+    filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+
 
     
     
