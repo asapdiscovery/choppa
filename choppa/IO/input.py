@@ -1,11 +1,9 @@
-
 import pandas as pd
 from typing import Optional
 from pathlib import Path
 import numpy as np 
 import logging, sys
 from collections import OrderedDict
-
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
@@ -137,6 +135,7 @@ class FitnessFactory():
         return fitness_basedict
 
 from Bio.PDB import PDBParser
+from rdkit import Chem
 
 class ComplexFactory():
     """
@@ -170,16 +169,12 @@ class ComplexFactory():
         self.check_validity(complex)
         return complex
 
-    def load_pdb_string(self):
+    def load_pdb_rdkit(self):
         """
-        Loads an input PDB file to a string
-
-        TODO: implement validity checks here like with `self.load_pdb()`
+        Loads an input PDB file to an RDKit object for easier string retrieval
         """
-        with open(self.path_to_pdb_file, 'r') as file:
-            pdb_string = file.read()
-
-        return pdb_string
+        return Chem.MolFromPDBFile(self.path_to_pdb_file)
+    
 
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_COMPLETE_NOCONF
