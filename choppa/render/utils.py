@@ -1,16 +1,17 @@
-#!/usr/bin/python
+import MDAnalysis
 
-"""PyMOL plugin that provides show_contacts command and GUI
-for highlighting good and bad polar contacts. Factored out of
-clustermols by Matthew Baumgartner.
-The advantage of this package is it requires many fewer dependencies.
-"""
+def get_ligand_resnames(PDB, remove_solvent=True):
+    """
+    Uses MDAnalysis to figure out what residue names the ligand(s) in the protein PDB has/have.
+    """
+    u = MDAnalysis.Universe(PDB)
 
-import os  # noqa: F401
-import sys  # noqa: F401
-
-DEBUG = 1
-
+    if remove_solvent:
+        ag = u.select_atoms("not protein and not (name H* or type OW)")
+    else:
+        ag = u.select_atoms("not protein")
+    resnames = set(ag.resnames)
+    return list(resnames)
 
 def show_contacts(
     pymol_instance,
@@ -19,9 +20,13 @@ def show_contacts(
     result="contacts",
     cutoff=3.6,
     bigcutoff=4.0,
-    SC_DEBUG=DEBUG,
+    SC_DEBUG=1,
 ):
     """
+    PyMOL plugin that provides show_contacts command and GUI
+    for highlighting good and bad polar contacts. Factored out of
+    clustermols by Matthew Baumgartner.
+    The advantage of this package is it requires many fewer dependencies.
     USAGE
 
     show_contacts pymol_instance, selection, selection2, [result=contacts],[cutoff=3.6],[bigcutoff=4.0]

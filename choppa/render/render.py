@@ -1,6 +1,6 @@
 import logging, sys
 import pymol2
-from choppa.render.utils import show_contacts
+from choppa.render.utils import show_contacts, get_ligand_resnames
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
