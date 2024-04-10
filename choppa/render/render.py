@@ -102,7 +102,7 @@ class PYMOL():
             "n_fit_3" : "tv_red",
             "n_fit_4" : "red",
             "n_fit_5" : "firebrick",
-            "no_fitness_data" : "gray",
+            "no_fitness_data" : "skyblue",
         }
         return residue_mutability_levels, mutability_color_dict
 
@@ -206,7 +206,7 @@ class PYMOL():
         """
         Writes out a pymol session to a `.pse` file.
         """
-        logger.info(f"PyMOL session: writing session file to {out_filename}")
+        logger.info(f"PyMOL session: writing session file to {out_filename}\n")
         p.cmd.save(out_filename)
 
     def render(self):
@@ -242,14 +242,15 @@ class HTML():
     """
 
 
+
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_TRUNCATED
     from choppa.data.toy_data.resources import TOY_FITNESS_DATA_SECTIONED, TOY_FITNESS_DATA_COMPLETE_NOCONF
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
-                                    # confidence_colname="confidence"
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
+                                    confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
