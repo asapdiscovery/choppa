@@ -15,10 +15,11 @@ class PYMOL():
     settings in the GUI application themselves, but a combination of pre-set `ray` settings is provided
     in the `.pse` file. 
     """
-    def __init__(self, filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold):
+    def __init__(self, filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold, output_session_file="out.pse"):
         self.fitness_dict = filled_aligned_fitness_dict
         self.complex = complex
         self.fitness_threshold = fitness_threshold
+        self.output_session_file = output_session_file
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
@@ -172,12 +173,18 @@ class PYMOL():
         p.cmd.set("surface_mode", 3)
         
         # set some variables to improve the image when the user `ray`s the session once loaded
-        # p.cmd.set("surface_quality", 2) # turn on after dev
+        # these increase the loading/ray time in PyMOL significantly but are needed to make 
+        # publication-ready figures. These could be adjusted to conform to journals' demands.
+        p.cmd.set("surface_quality", 2)
         p.cmd.set("antialias", 2)
+        p.cmd.set("ray_shadows", 0) 
+        p.cmd.set("ray_trace_mode", 1) # smooth with black outlining on objects
+        p.cmd.set("specular", 0) # removes reflections on surface for easier interpretation
 
         if ligands_in_system:
             # select the ligand and subpocket residues, show them as sticks w/o nonpolar Hs
             # TODO: set ligand stick color that conforms to HTML view
+            p.cmd.util.cba(144,"ligand",_self=p.cmd)
             p.cmd.show("sticks", "ligand")
             p.cmd.show("spheres", "ligand")
             p.cmd.set("stick_radius", "0.15")
@@ -194,14 +201,12 @@ class PYMOL():
         # in the same way that we colored the residue surface
         for fitness_degree_selection, color in mutability_color_dict.items():
             show_contacts(p, fitness_degree_selection, "ligand", contact_color=color)
-        
-        #TODO: color backbone interactions green instead. How can we retrieve that data from pymol?
-    
+            
     def pymol_write_session(self, p, out_filename):
         """
         Writes out a pymol session to a `.pse` file.
         """
-        logger.info("PyMOL session: writing session file to {out_filename}")
+        logger.info(f"PyMOL session: writing session file to {out_filename}")
         p.cmd.save(out_filename)
 
     def render(self):
@@ -228,7 +233,7 @@ class PYMOL():
             self.pymol_add_interactions(p, mutability_color_dict)
 
         # finally write to a session file (`.pse`)
-        self.pymol_write_session(p, "test_sess.pse")
+        self.pymol_write_session(p, self.output_session_file)
 
 class HTML():
     """
@@ -243,7 +248,7 @@ if __name__ == "__main__":
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
                                     # confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
