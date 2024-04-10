@@ -170,6 +170,17 @@ class ComplexFactory():
         self.check_validity(complex)
         return complex
 
+    def load_pdb_string(self):
+        """
+        Loads an input PDB file to a string
+
+        TODO: implement validity checks here like with `self.load_pdb()`
+        """
+        with open(self.path_to_pdb_file, 'r') as file:
+            pdb_string = file.read()
+
+        return pdb_string
+
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_COMPLETE_NOCONF
     fitness_df = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 

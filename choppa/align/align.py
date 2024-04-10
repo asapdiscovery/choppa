@@ -121,7 +121,7 @@ class AlignFactory():
         if len(alignments) > 1:
             # can implement a fix once we hit a system that has this; not sure how to handle other than take the top alignment
             raise NotImplementedError(f"More than 1 alignments found, this is currently not implemented.")
-        logging.info(f"Found alignment:\n{str(alignments[0]).replace("target", "CSV   ").replace("query", "PDB  ")}")
+        logging.info(f"Found alignment:\n{str(alignments[0]).replace('target', 'CSV   ').replace('query', 'PDB  ')}")
 
         return alignments[0]
 
