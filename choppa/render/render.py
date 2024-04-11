@@ -249,7 +249,7 @@ if __name__ == "__main__":
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
                                     confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
@@ -262,3 +262,4 @@ if __name__ == "__main__":
           complex,
           complex_rdkit,
           fitness_threshold=0.7).render()
+
