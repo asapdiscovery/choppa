@@ -53,7 +53,11 @@ class LogoPlot():
         Creates a logoplot as a base64 string. Also annotes with confidence values if present.
 
         TODO: nicer rounded ticks agnostic to array limits
-        """   
+        """  
+        if len(mutants) == 0:
+            # this can happen when there are no mutants in this category. Return an empty base64 instead.
+            return ""
+        plt.switch_backend('Agg') # prevents plt from opening a figure on OS
         _, ax = plt.subplots(figsize=(3, 10))
 
         # if there are confidences, we well color the logoplot AA letters by confidence and
@@ -86,10 +90,6 @@ class LogoPlot():
             # just use regular coloring if there is no confidence set.
             conf_color_per_AA = "dmslogo_funcgroup"
 
-        if len(mutants) == 0:
-            # this can happen when there are no mutants in this category. Return an empty base64 instead.
-            return ""
-
         # create Logo object
         logomaker.Logo(
             pd.DataFrame(mutants)[:1],
@@ -113,6 +113,7 @@ class LogoPlot():
             )
         lp_bytes.seek(0)
         lp_base64 = base64.b64encode(lp_bytes.read())
+        plt.close()
 
         return lp_base64
 

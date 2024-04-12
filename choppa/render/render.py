@@ -3,9 +3,11 @@ import pymol2
 from io import StringIO
 from rdkit import Chem
 import math 
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
 
 from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str
-
+from choppa.render.logoplots import LogoPlot
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
@@ -266,14 +268,38 @@ class HTML():
                 for conf_val in mut_conf_values + [wildtype_conf_value]:
                     confidence_values.append(conf_val)
         if math.isnan(confidence_values[0]):
-            return False
+            return False, False
         else:
             return [min(confidence_values), max(confidence_values)]
+        
+    def get_logoplot_dict(self, confidence_lims, multiprocess=False):
+        """
+        For a fitness dict, load all base64 logoplots into memory using multithreading if requested.
+        """
+        logger.info(f"Generating logoplots for {len(self.fitness_dict)} residues.")
+        
+        if multiprocess:
+            # TODO
+            raise NotImplementedError("Multiprocessing for `LogoPlot` generation is not yet supported.")
+        else:
+            for _, residue_fitness_dict in tqdm(self.fitness_dict.items()):
+                wildtype_base64, fit_base64, unfit_base64 = LogoPlot(
+                    residue_fitness_dict, 
+                    fitness_threshold=self.fitness_threshold).build_logoplot(
+                        global_min_confidence=confidence_lims[0], 
+                        global_max_confidence=confidence_lims[1])
 
 
     def render(self):
+        # check if we have confidences, if we do then record the [min, max]
         confidence_lims = self.get_confidence_limits()
-        print(confidence_lims)
+
+        # load logoplots into memory as base64 images in a dict. This will take 3-10MB of memory,
+        # but may be more if the PDB is huge. We could opt to do this later but we'll have to
+        # load it into memory at some point anyway to be able to write out the final HTML.
+        # Plus, this makes the multithreading easier to debug as there are fewer layers.
+        self.get_logoplot_dict(confidence_lims)
+
 
 
 
