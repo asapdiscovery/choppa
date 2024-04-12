@@ -7,6 +7,30 @@ import io
 import numpy as np
 import math
 
+LOGOPLOT_WITHOUT_CONF_COLORSCHEME = { # see https://github.com/jbkinney/logomaker/blob/master/logomaker/src/colors.py
+        'A': '#f76ab4',
+        'C': '#ff7f00',
+        'D': '#e41a1c',
+        'E': '#e41a1c',
+        'F': '#84380b',
+        'G': '#f76ab4',
+        'H': '#3c58e5',
+        'I': '#12ab0d',
+        'K': '#3c58e5',
+        'L': '#12ab0d',
+        'M': '#12ab0d',
+        'N': '#972aa8',
+        'P': '#12ab0d',
+        'Q': '#972aa8',
+        'R': '#3c58e5',
+        'S': '#ff7f00',
+        'T': '#ff7f00',
+        'V': '#12ab0d',
+        'W': '#84380b',
+        'Y': '#84380b',
+        'X': '#000000', # add 'X' so that LogoMaker doesn't log to stdout
+    }
+
 class LogoPlot():
     """
     Given a dict with mutants for a given residue, generate logoplots.
@@ -88,7 +112,7 @@ class LogoPlot():
             conf_color_per_AA = { k:mappable.to_rgba(v[1]) for k,v in mutants.items() }
         else:
             # just use regular coloring if there is no confidence set.
-            conf_color_per_AA = "dmslogo_funcgroup"
+            conf_color_per_AA = LOGOPLOT_WITHOUT_CONF_COLORSCHEME
 
         # create Logo object
         logomaker.Logo(

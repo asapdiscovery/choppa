@@ -275,20 +275,49 @@ class HTML():
     def get_logoplot_dict(self, confidence_lims, multiprocess=False):
         """
         For a fitness dict, load all base64 logoplots into memory using multithreading if requested.
+
+        Instead of adding base64 strings to fitness dict (making it uninterpretable), make a separate
+        dict that mimics the form of fitness dict. 
         """
         logger.info(f"Generating logoplots for {len(self.fitness_dict)} residues.")
-        
+        logoplot_dict = {}
+
         if multiprocess:
             # TODO
             raise NotImplementedError("Multiprocessing for `LogoPlot` generation is not yet supported.")
         else:
-            for _, residue_fitness_dict in tqdm(self.fitness_dict.items()):
+            for idx, residue_fitness_dict in tqdm(self.fitness_dict.items()):
+                
+                # catch if res has no fitness, would throw an error in logoplot generation.
+                if not 'aa' in residue_fitness_dict['wildtype']:
+                    logoplot_dict[idx] = {
+                    'fitness_aligned_index': idx, 
+                    'fitness_csv_index': idx,
+                    'logoplots_base64' : {
+                        'wildtype' : "",
+                        'fit' : "",
+                        'unfit' : ""
+                    }}
+                    continue
+
                 wildtype_base64, fit_base64, unfit_base64 = LogoPlot(
                     residue_fitness_dict, 
                     fitness_threshold=self.fitness_threshold).build_logoplot(
                         global_min_confidence=confidence_lims[0], 
                         global_max_confidence=confidence_lims[1])
-
+                
+                logoplot_dict[idx] = {
+                    'fitness_aligned_index': residue_fitness_dict['fitness_aligned_index'], 
+                    'fitness_csv_index': residue_fitness_dict['fitness_csv_index'],
+                    'logoplots_base64' : {
+                        'wildtype' : wildtype_base64,
+                        'fit' : fit_base64,
+                        'unfit' : unfit_base64
+                    }}
+                
+        return logoplot_dict
+                
+        
 
     def render(self):
         # check if we have confidences, if we do then record the [min, max]
@@ -310,7 +339,7 @@ if __name__ == "__main__":
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
     fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
-                                    confidence_colname="confidence"
+                                    # confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
