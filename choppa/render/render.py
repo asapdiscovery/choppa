@@ -2,6 +2,7 @@ import logging, sys
 import pymol2
 from io import StringIO
 from rdkit import Chem
+import math 
 
 from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str
 
@@ -240,6 +241,39 @@ class HTML():
     Uses 3DMol and Jinja to create a single HTML file that can be hosted anywhere to enable shareable 
     interactive views of the fitness data on top of the complex PDB
     """
+    def __init__(self, filled_aligned_fitness_dict, 
+                 complex, complex_rdkit, fitness_threshold, output_session_file="out.html"):
+        self.fitness_dict = filled_aligned_fitness_dict
+        self.complex = complex
+        self.fitness_threshold = fitness_threshold
+        self.output_session_file = output_session_file
+
+        # get the PDB file as a string from RDKit
+        self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
+    
+    def get_confidence_limits(self):
+        """
+        Figures out what the global maximum and minimum is of the confidence measures (e.g. number of reads)
+        in the experimental protocol of the fitness data. If there is no confidence measure, returns False
+        """
+        self.confidence = False
+        confidence_values = []
+        for i, res in self.fitness_dict.items():
+            if 'mutants' in res: # skips over PDB residues that don't have fitness data
+                mut_conf_values = [ mut['confidence'] for mut in res['mutants'] ]
+                wildtype_conf_value = res['wildtype']['confidence']
+
+                for conf_val in mut_conf_values + [wildtype_conf_value]:
+                    confidence_values.append(conf_val)
+        if math.isnan(confidence_values[0]):
+            return False
+        else:
+            return [min(confidence_values), max(confidence_values)]
+
+
+    def render(self):
+        confidence_lims = self.get_confidence_limits()
+        print(confidence_lims)
 
 
 
@@ -249,7 +283,7 @@ if __name__ == "__main__":
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
                                     confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
@@ -258,7 +292,12 @@ if __name__ == "__main__":
     from choppa.align.align import AlignFactory
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
-    PYMOL(filled_aligned_fitness_dict, 
+    # PYMOL(filled_aligned_fitness_dict, 
+    #       complex,
+    #       complex_rdkit,
+    #       fitness_threshold=0.7).render()
+
+    HTML(filled_aligned_fitness_dict, 
           complex,
           complex_rdkit,
           fitness_threshold=0.7).render()
