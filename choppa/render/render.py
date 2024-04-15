@@ -11,7 +11,7 @@ from choppa.render.logoplots import LogoPlot
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
-class PYMOL():
+class PublicationView():
     """
     Uses the PyMOL API to create a session file for publication-ready views of the fitness data on 
     top of the complex PDB. Users will need to `ray` the PyMOL view with the desired `ray`
@@ -238,7 +238,7 @@ class PYMOL():
         # finally write to a session file (`.pse`)
         self.pymol_write_session(p, self.output_session_file)
 
-class HTML():
+class InteractiveView():
     """
     Uses 3DMol and Jinja to create a single HTML file that can be hosted anywhere to enable shareable 
     interactive views of the fitness data on top of the complex PDB
@@ -327,7 +327,11 @@ class HTML():
         # but may be more if the PDB is huge. We could opt to do this later but we'll have to
         # load it into memory at some point anyway to be able to write out the final HTML.
         # Plus, this makes the multithreading easier to debug as there are fewer layers.
-        self.get_logoplot_dict(confidence_lims)
+        logoplot_dict = self.get_logoplot_dict(confidence_lims)
+
+        # get the strings for the PDB (prot) and the SDF (lig, if present) 
+
+        # do a dirty HTML generation using the logoplot and fitness dicts.
 
 
 
@@ -347,12 +351,12 @@ if __name__ == "__main__":
     from choppa.align.align import AlignFactory
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
-    # PYMOL(filled_aligned_fitness_dict, 
+    # PublicationView(filled_aligned_fitness_dict, 
     #       complex,
     #       complex_rdkit,
     #       fitness_threshold=0.7).render()
 
-    HTML(filled_aligned_fitness_dict, 
+    InteractiveView(filled_aligned_fitness_dict, 
           complex,
           complex_rdkit,
           fitness_threshold=0.7).render()
