@@ -72,17 +72,20 @@ class LogoPlot():
 
         return {wildtype: wildtype_fitness}, unfit_mutants, fit_mutants
     
-    def render_logoplot(self, mutants, global_min_confidence=False, global_max_confidence=False, lhs=True):
+    def render_logoplot(self, mutants, global_min_confidence=False, global_max_confidence=False, lhs=True, wildtype=False):
         """
         Creates a logoplot as a base64 string. Also annotes with confidence values if present.
 
         TODO: nicer rounded ticks agnostic to array limits
         """  
         if len(mutants) == 0:
-            # this can happen when there are no mutants in this category. Return an empty base64 instead.
-            return ""
+            # this can happen when there are no mutants in this category. Return an empty white-sqare base64 instead.
+            return "iVBORw0KGgoAAAANSUhEUgAAAJYAAACfCAIAAACUbLd9AAAACXBIWXMAAAsTAAALEwEAmpwYAAABhElEQVR4nO3RwQkAIBDAMHX/nc8hfEghmaDQPTOLsvM7gFcW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5l1WGwQ7i50I0AAAAABJRU5ErkJggg=="
         plt.switch_backend('Agg') # prevents plt from opening a figure on OS
-        _, ax = plt.subplots(figsize=(3, 10))
+        if wildtype: # we want this to be a bit smaller and square because it'll always have 1 residue.
+            _, ax = plt.subplots(figsize=(4, 4))
+        else:
+            _, ax = plt.subplots(figsize=(3, 10))
 
         # if there are confidences, we well color the logoplot AA letters by confidence and
         # show a color bar if this is the left-hand-side logoplot. 
@@ -147,9 +150,9 @@ class LogoPlot():
 
         # generate the logoplot base64 for wildtype (LHS, top), fit (LHS, bottom) and unfit (RHS; with colorbar) 
         wildtype_base64 = self.render_logoplot(wildtype, global_min_confidence=global_min_confidence, 
-                             global_max_confidence=global_max_confidence, lhs=True)
+                             global_max_confidence=global_max_confidence, wildtype=True)
         fit_base64 = self.render_logoplot(fit_mutants, global_min_confidence=global_min_confidence, 
-                             global_max_confidence=global_max_confidence, lhs=True)
+                             global_max_confidence=global_max_confidence)
         unfit_base64 = self.render_logoplot(unfit_mutants, global_min_confidence=global_min_confidence, 
                              global_max_confidence=global_max_confidence, lhs=False)
         

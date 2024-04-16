@@ -1,0 +1,236 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+    <link crossorigin="anonymous" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" rel="stylesheet" />
+    <script src="https://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+      /* Dropdown Button */
+      .dropbtn {
+        background-color: #04AA6D;
+        color: white;
+        padding: 16px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5;
+      }
+
+      /* The container <div> - needed to position the dropdown content */
+      .dropdown {
+        position: absolute;
+        display: inline-block;
+        left: 1%;
+        top: 1%;
+      }
+      .dropdown_ctcs {
+        position: absolute;
+        top: 7%;
+        left: 1%;
+        display: inline-block;
+      }
+
+  .dropdown_lgplts {
+        position: absolute;
+        top: 13%;
+        left: 1%;
+        display: inline-block;
+      }
+
+    /* Dropdown Content (Hidden by Default) */
+      .dropdown-content {
+        display: none;
+        position: relative;
+        background-color: #f1f1f1;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+      }
+
+      /* Links inside the dropdown */
+      .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        cursor: default;
+      }
+                                                              
+      /* Show the dropdown menu on hover */
+      .dropdown:hover .dropdown-content {display: block;}
+      .dropdown_ctcs:hover .dropdown-content {display: block;}
+   .dropdown_lgplts:hover .dropdown-content {display: block;}
+   
+      /* Change the background color of the dropdown button when the dropdown content is shown */
+      .dropdown:hover .dropbtn {background-color: #3e8e41;}
+    
+
+      .viewerbox {
+        position: absolute;
+        width: 200px;
+        height: 100px;
+        padding: 10px;
+      }
+      .logoplotbox_wt {
+        position: absolute;
+        top: 1%;
+        right:45%;
+        border: 5px solid black;
+      }
+      .logoplotbox_unfit {
+        position: absolute;
+        top: 35%;
+        right:1%;
+        border: 5px solid black;
+      }
+      .logoplotbox_fit {
+        position: absolute;
+        top: 35%;
+        left:1%;
+        border: 5px solid black;
+      }
+    </style>
+    <!-- wrap the main JS block to please the frontend gods -->
+    <div class="box">
+      <div id="gldiv" style="width: 100vw; height: 100vh;"></div>
+    </div>
+    <!-- show the top dropdown (surfaces) -->
+    <div class="dropdown">
+      <button class="dropbtn">Surface coloration</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Protein residue surfaces are colored by mutability:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">⚪ : No amino acid substitutions tolerated</a>
+        <a href="#">🔴 : increasing tolerance for amino acid substitutions (increasing with 🔴 intensity)</a>
+        <a href="#">🟣 : No data for residue</a>
+      </div>
+    </div>
+    <!-- show the bottom dropdown (contacts) -->
+    <div class="dropdown_ctcs">
+      <button class="dropbtn">Ligand-protein contacts</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Ligand-protein contacts are shown as dashed lines colored by:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">⬜ : Ligand contact is with amino acid side chain that has no tolerated substitutions</a>
+        <a href="#">🟩 : Ligand contact is with peptide backbone</a>
+        <a href="#">🟥 : Ligand contact is with amino acid side chain that has tolerated substitutions (increasing with 🔴 intensity)</a>
+        <a href="#">🟪 : No data for contacted residue</a>
+      </div>
+    </div>
+    <!-- show the bottom dropdown (logoplots) -->
+    <div class="dropdown_lgplts">
+      <button class="dropbtn">Logo Plots</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Fitness logo plots are shown on hover of residue atoms:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">Top: Wildtype of this residue; this should correspond to the residue type that is being hovered over in the 3D view.</a>
+        <a href="#">Left: amino acids at this position that are consistent with virus viability. Letter heights are scaled to  indicate<br />the fractions of the viable viral populations with the particular residue at this position</a>
+        <a href="#">Right: amino acids at this position that are present in the selected population at background frequencies,<br />and thus likely to be inconsistent with viral viability. Stop codons (*) can also be present in these populations<br />of unselected genomes</a>
+        <a href="#">Coloring: Residue letters are either colored by type or by confidence if your input fitness data contains a confidence column.<br />The right-hand-side logoplot displays the colorbar for the range of confidences.</a>
+      </div>
+    </div>
+    <!-- show logoplots per residue on hover -->
+    <!-- bake in the base64 divs of all the residues. -->
+    {{LOGOPLOTS_INSERTS}}
+  </head>
+  <script>
+    function showLogoPlots(resi) {
+        var z = document.getElementById("wtDIV_"+resi);
+        var x = document.getElementById("fitDIV_"+resi);
+        var y = document.getElementById("unfitDIV_"+resi);
+        z.style.display = "block";
+        x.style.display = "block";
+        y.style.display = "block";
+
+      }
+      function hideLogoPlots(resi) {
+        var z = document.getElementById("wtDIV_"+resi);
+        var x = document.getElementById("fitDIV_"+resi);
+        var y = document.getElementById("unfitDIV_"+resi);
+        z.style.display = "none";
+        x.style.display = "none";
+        y.style.display = "none";
+      }
+    var viewer=$3Dmol.createViewer($("#gldiv"));
+                     var prot_pdb = `{{PDB_INSERT}}`;
+                     var lig_sdf =`{{SDF_INSERT}}`;       
+                         //////////////// set up system
+                         viewer.addModel(prot_pdb, "pdb") 
+                         // set protein sticks and surface
+                         viewer.setStyle({model: 0}, {stick: {colorscheme: "whiteCarbon", radius:0.15}});
+                         // define a coloring function based on our residue ranges. We can't call .addSurface separate times because the surfaces won't be merged nicely. 
+                         var colorAsSnake = function(atom) {                         if (['155_A','196_A','186_A','227_A','284_A','33_A','93_A','6_A','180_A','191_A','142_A','153_A','222_A','279_A','156_A','1_A','69_A','233_A','244_A','263_A','198_A','285_A','121_A','277_A','94_A','228_A','45_A','18_A','220_A','37_A','116_A','261_A','67_A','78_A','212_A','280_A','272_A','21_A','234_A','264_A','81_A','160_A','283_A','24_A','84_A','106_A','46_A','259_A','8_A','19_A','232_A','243_A','224_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff8a6c' 
+ } else if (['166_A','117_A','128_A','139_A','22_A','79_A','235_A','41_A','52_A','197_A','109_A','120_A','265_A','3_A','14_A','82_A','216_A','295_A','44_A','189_A','63_A','208_A','150_A','161_A','306_A','112_A','268_A','74_A','85_A','219_A','287_A','36_A','181_A','115_A','238_A','143_A','66_A','200_A','211_A','28_A','173_A','230_A','192_A','203_A','9_A','145_A','290_A','39_A','118_A','252_A','175_A','58_A','80_A','214_A','137_A','271_A','282_A','293_A','31_A','205_A','99_A','195_A','206_A','168_A','110_A','42_A','187_A','140_A','151_A','170_A','53_A','64_A','266_A','26_A','122_A','34_A','56_A','113_A','258_A','269_A','209_A','182_A','124_A','135_A','231_A','154_A','165_A','299_A','10_A','146_A','291_A','29_A','40_A','174_A','242_A','2_A','147_A','59_A','215_A','302_A','51_A','176_A','138_A','149_A','294_A','217_A','111_A','245_A','256_A','5_A','179_A','207_A','218_A','130_A','275_A','286_A','13_A','248_A','131_A','54_A','210_A','267_A','16_A','172_A','141_A','114_A','171_A','76_A','133_A','144_A','278_A','289_A','27_A','201_A','95_A','240_A','163_A','57_A','202_A','164_A','126_A','183_A','194_A','262_A','11_A','136_A','98_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ffffff' 
+ } else if (['105_B','116_B','261_B','10_B','67_B','78_B','89_B','212_B','223_B','146_B','29_B','40_B','280_B','174_B','185_B','291_B','108_B','242_B','2_B','253_B','136_B','147_B','59_B','70_B','204_B','215_B','98_B','272_B','21_B','155_B','166_B','177_B','302_B','234_B','167_A','117_B','128_B','139_B','264_B','196_B','101_B','158_B','283_B','294_B','32_B','43_B','25_A','100_B','111_B','245_B','256_B','5_B','62_B','73_B','207_B','218_B','130_B','275_B','13_B','24_B','35_B','169_B','286_B','92_B','226_B','237_B','248_B','131_B','305_B','54_B','188_B','199_B','210_B','93_B','267_B','16_B','150_B','161_B','172_B','229_B','112_B','123_B','180_B','191_B','65_B','142_B','153_B','278_B','289_B','27_B','84_B','95_B','240_B','46_B','57_B','68_B','202_B','297_B','125_B','8_B','19_B','30_B','164_B','259_B','270_B','87_B','221_B','232_B','243_B','281_B','126_B','300_B','38_B','49_B','183_B','194_B','77_B','251_B','11_B','262_B','145_B','156_B','269_B','213_B','224_B','96_B','107_B','118_B','175_B','60_B','137_B','273_B','22_B','205_B','79_B','90_B','235_B','292_B','303_B','41_B','52_B','186_B','197_B','109_B','120_B','254_B','265_B','3_B','14_B','148_B','71_B','82_B','216_B','227_B','110_B','284_B','33_B','44_B','167_B','178_B','189_B','72_B','246_B','129_B','140_B','151_B','63_B','208_B','91_B','102_B','25_B','159_B','170_B','55_B','132_B','257_B','268_B','6_B','295_B','74_B','85_B','219_B','276_B','36_B','47_B','287_B','181_B','298_B','104_B','115_B','238_B','249_B','260_B','299_B','143_B','66_B','200_B','211_B','222_B','134_B','17_B','28_B','162_B','173_B','279_B','230_B','241_B','124_B','135_B','192_B','203_B','86_B','97_B','9_B','154_B','165_B','290_B','39_B','127_B','252_B','1_B','184_B','58_B','69_B','80_B','214_B','271_B','282_B','293_B','20_B','31_B','88_B','99_B','233_B','244_B','301_B','50_B','61_B','195_B','206_B','62_A','263_B','12_B','23_B','157_B','168_B','274_B','51_B','225_B','236_B','119_B','42_B','176_B','187_B','198_B','81_B','255_B','4_B','138_B','149_B','160_B','285_B','217_B','179_B','304_B','53_B','64_B','121_B','266_B','277_B','15_B','26_B','83_B','94_B','228_B','239_B','122_B','34_B','45_B','56_B','190_B','296_B','113_B','7_B','18_B','247_B','141_B','152_B','258_B','75_B','209_B','220_B','103_B','114_B','288_B','221_A','37_B','171_B','182_B','76_B','250_B','133_B','144_B','201_B','106_B','231_B','163_B','48_B','193_B'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#642df0' 
+ } else if (['60_A','90_A','101_A','158_A','292_A','303_A','254_A','148_A','71_A','178_A','55_A','123_A','257_A','298_A','104_A','260_A','134_A','162_A','77_A','107_A','20_A','88_A','301_A','50_A','61_A','12_A','23_A','157_A','225_A','236_A','72_A','255_A','4_A','129_A','91_A','102_A','159_A','304_A','15_A','239_A','296_A','190_A','247_A','7_A','152_A','288_A','250_A','97_A','48_A','105_A','127_A','89_A','185_A','253_A','204_A','177_A','119_A','32_A','43_A','100_A','73_A','35_A','169_A','92_A','226_A','237_A','305_A','188_A','199_A','229_A','103_A','65_A','297_A','68_A','125_A','281_A','270_A','30_A','87_A','300_A','38_A','49_A','251_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff9e83' 
+ } else if (['273_A','276_A','47_A','249_A','17_A','86_A','193_A','223_A','70_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff7454' 
+ } else if (['246_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff3f25' 
+ } else if (['241_A','96_A','274_A','83_A','75_A','184_A','213_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff5c3d' 
+ } else if (['132_A','108_A'].includes(atom.resi+'_'+atom.chain)){ 
+ return '#ff0707' 
+                                          }};                         viewer.addSurface("MS", {colorfunc: colorAsSnake, opacity: 0.9}) 
+                     
+                         viewer.setStyle({bonds: 0}, {sphere:{radius:0.5}}); //water molecules
+                     
+                         viewer.addModel(lig_sdf, "sdf")   
+                         // set ligand sticks
+                         viewer.setStyle({model: -1}, {stick: {colorscheme: "pinkCarbon"}});
+                     
+                         ////////////////// enable show residue number on hover
+                         viewer.setHoverable({}, true,
+                         function (atom, viewer, event, container) {
+                             if (!atom.label) {
+                                 if (atom.chain === undefined){
+                                  display_str = 'LIGAND';
+                                } else {
+                                  display_str = atom.resn + atom.resi;showLogoPlots(atom.resi);
+                                }
+                                atom.label = viewer.addLabel(display_str, { position: atom, backgroundColor: 'mintcream', fontColor: 'black' });                             }
+                         },
+                         function (atom) {
+                             if (atom.label) {
+                                 viewer.removeLabel(atom.label);
+                                 delete atom.label;
+if (atom.chain){
+ hideLogoPlots(atom.resi);
+ }
+}
+                         }
+                         );
+                         viewer.setHoverDuration(100); // makes resn popup instant on hover
+                     
+                         //////////////// add protein-ligand interactions
+                         var intn_dict = {'0_MET165.A': {'lig_at_x': '11.594', 'lig_at_y': '-1.029', 'lig_at_z': '22.265', 'prot_at_x': '12.038', 'prot_at_y': '1.138', 'prot_at_z': '19.397', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '1_GLU166.A': {'lig_at_x': '5.139', 'lig_at_y': '1.557', 'lig_at_z': '19.297', 'prot_at_x': '7.624', 'prot_at_y': '4.118', 'prot_at_z': '18.338', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '2_GLU166.A': {'lig_at_x': '9.020', 'lig_at_y': '1.593', 'lig_at_z': '21.267', 'prot_at_x': '9.672', 'prot_at_y': '2.793', 'prot_at_z': '18.548', 'type': 'hydrogen_bond', 'color': '#008000'}, '3_HIS41.A': {'lig_at_x': '12.093', 'lig_at_y': '0.095', 'lig_at_z': '22.863', 'prot_at_x': '11.997', 'prot_at_y': '-5.242', 'prot_at_z': '21.702', 'type': 'pi_stack', 'color': '#ffffff'}}
+                         for (const [_, intn] of Object.entries(intn_dict)) {
+                             viewer.addCylinder({start:{x:parseFloat(intn["lig_at_x"]),y:parseFloat(intn["lig_at_y"]),z:parseFloat(intn["lig_at_z"])},
+                                                     end:{x:parseFloat(intn["prot_at_x"]),y:parseFloat(intn["prot_at_y"]),z:parseFloat(intn["prot_at_z"])},
+                                                     radius:0.1,
+                                                     dashed:true,
+                                                     fromCap:2,
+                                                     toCap:2,
+                                                     color:intn["color"]},
+                                                     );
+                         }
+                     
+                         ////////////////// set the view correctly
+                         viewer.setBackgroundColor(0xffffffff);
+                         viewer.setView(
+                             [-20.57886926575674, 1.4522825208738426, -17.79941670319449, 77.15778084734526, -0.5549623159570264, -0.11539982591793649, 0.8088242618222696, -0.15653441006175986]
+                             )
+                        viewer.setZoomLimits(1,250) // prevent infinite zooming
+ viewer.render();
+  </script>
+</html>

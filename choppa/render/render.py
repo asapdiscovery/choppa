@@ -6,7 +6,7 @@ import math
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
-from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str
+from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str, split_pdb_str
 from choppa.render.logoplots import LogoPlot
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
@@ -316,7 +316,66 @@ class InteractiveView():
                     }}
                 
         return logoplot_dict
-                
+    
+    # also add in interactions dict
+
+
+    def inject_stuff_in_template(self, sdf_str, pdb_str, logoplot_dict, template="Template.html", out_file="out.html"):
+        """"
+        Replaces parts of a template HTML with relevant bits of data to get to a HTML view
+        of the (ligand-) protein, its fitness and its interactions (if any).
+        TODO: HMO to replace this crude replacement code with `jinja`.
+        """
+        # create a bunch of DIVs of the logoplots.
+        logoplot_divs = ""
+        for _, logoplot_data in logoplot_dict.items():
+            # we have to write a DIV for each logoplot. keep this repetetive for HMO to understand more easily.
+            # we're just adding more and more to the `logoplot_divs` string with properly placed newlines to make this work.
+            # start with wildtype
+            LOGOPLOT_TYPE_INSERT = "logoplotbox_wt"
+            LOGOPLOT_DIV_ID_INSERT = f"wtDIV_{logoplot_data['fitness_aligned_index']}"
+            LOGOPLOT_DESCRIPTION_INSERT = "wt residue logoplot"
+            LOGOPLOT_BASE64_INSERT = str(logoplot_data['logoplots_base64']['wildtype']).replace("b'", "").replace("'", "") # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair 
+            logoplot_divs += f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'\
+            +f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'\
+                +'</div>\n' # NB: had to switch around quotation types bc JS is awful (the language, not the person)
+            # then do fit
+            LOGOPLOT_TYPE_INSERT = "logoplotbox_fit"
+            LOGOPLOT_DIV_ID_INSERT = f"fitDIV_{logoplot_data['fitness_aligned_index']}"
+            LOGOPLOT_DESCRIPTION_INSERT = "fit residue logoplot"
+            LOGOPLOT_BASE64_INSERT = str(logoplot_data['logoplots_base64']['fit']).replace("b'", "").replace("'", "") # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair 
+            logoplot_divs += f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'\
+            +f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'\
+                +'</div>\n' # NB: had to switch around quotation types bc JS is awful (the language, not the person)
+            # then do unfit
+            LOGOPLOT_TYPE_INSERT = "logoplotbox_unfit"
+            LOGOPLOT_DIV_ID_INSERT = f"unfitDIV_{logoplot_data['fitness_aligned_index']}"
+            LOGOPLOT_DESCRIPTION_INSERT = "unfit residue logoplot"
+            LOGOPLOT_BASE64_INSERT = str(logoplot_data['logoplots_base64']['unfit']).replace("b'", "").replace("'", "") # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair 
+            logoplot_divs += f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'\
+            +f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'\
+                +'</div>\n' # NB: had to switch around quotation types bc JS is awful (the language, not the person)
+                        
+        # add the PDB (protein) and SDF (ligand)
+        with open(template, "rt") as fin:
+            with open(out_file, "wt") as fout:
+                for line in fin:
+                    line = line.replace("{{PDB_INSERT}}", f"{pdb_str}")
+                    line = line.replace("{{SDF_INSERT}}", f"{sdf_str}")
+                                
+                    # logoplots are a bit more complicated, need to add all those DIVs
+                    if "{{LOGOPLOTS_INSERTS}}" in line:
+                        line = line.replace("{{LOGOPLOTS_INSERTS}}", logoplot_divs)
+
+                    # add in interactions
+                    fout.write(line)
+        
+        # then add interactions
+
+        # then add surface coloring
+                   
+    
+                  
         
 
     def render(self):
@@ -330,8 +389,10 @@ class InteractiveView():
         logoplot_dict = self.get_logoplot_dict(confidence_lims)
 
         # get the strings for the PDB (prot) and the SDF (lig, if present) 
+        lig_sdf_str, prot_pdb_str = split_pdb_str(self.complex_pdb_str)
 
         # do a dirty HTML generation using the logoplot and fitness dicts.
+        self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, logoplot_dict)
 
 
 
@@ -342,8 +403,8 @@ if __name__ == "__main__":
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
-                                    # confidence_colname="confidence"
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
+                                    confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()

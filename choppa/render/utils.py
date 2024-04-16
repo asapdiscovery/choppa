@@ -1,7 +1,12 @@
 import MDAnalysis
 from MDAnalysis.lib.util import NamedStream
+import pymol2
+from rdkit import Chem
+
+import os
 from io import StringIO
 import warnings
+import tempfile
 
 def get_ligand_resnames_from_pdb_str(PDB_str, remove_solvent=True):
     """
@@ -19,6 +24,66 @@ def get_ligand_resnames_from_pdb_str(PDB_str, remove_solvent=True):
         ag = u.select_atoms("not protein")
     resnames = set(ag.resnames)
     return list(resnames)
+
+def get_pdb_components(PDB_str, remove_solvent=True):
+    """
+    Split a protein-ligand pdb into protein and ligand components
+    :param PDB_str:
+    :return:
+    """
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore") # hides MDA RunTimeWarning that complains about string IO
+        u = MDAnalysis.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
+
+    if remove_solvent:
+        ag = u.select_atoms("not (name H* or type OW)")
+    
+    ligand = u.select_atoms("not protein")
+    protein = u.select_atoms("protein")
+
+    return ligand, protein
+
+
+def process_ligand(ligand):
+    """
+    Add bond orders to a pdb ligand in an MDA universe object.
+    1. load PDB into PyMol session (PyMOL does the bond guessing)
+    2. write ligand to stream as SDF
+    3. Read the stream into an RDKit molecule
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        ligand.write(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.pdb")
+
+        p = pymol2.PyMOL()
+        p.start()
+        p.cmd.load(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.pdb")
+        p.cmd.save(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.sdf", "all", 0) # writes all states, so should be able to handle multi-ligand
+        p.stop()
+
+        with open(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.sdf","r") as f:
+            string = f.read()
+    return string
+
+def process_protein(protein):
+    """
+    Returns the string for the protein in an MDA universe object.
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        protein.write(f"{tmpdirname}/prot_tmp_while_hmo_helps_write_to_stream.pdb")
+        with open(f"{tmpdirname}/prot_tmp_while_hmo_helps_write_to_stream.pdb","r") as f:
+            string = f.read()
+    return string
+
+def split_pdb_str(PDB_str):
+    """
+    From a PDB string, gets the string for the protein and (if present) the ligand SDF (with guessed
+    bond orders).
+
+    Inspired by https://gist.github.com/PatWalters/c046fee2760e6894ed13e19b8c99193b
+    TODO: set below functions through NamedStream instead of tmpdir
+    """
+    ligand_pdb, protein_pdb = get_pdb_components(PDB_str)
+    return process_ligand(ligand_pdb),  process_protein(protein_pdb)
 
 def show_contacts(
     pymol_instance,
@@ -70,3 +135,4 @@ def show_contacts(
     pymol_instance.cmd.hide("labels", contacts_name) 
 
     return True
+
