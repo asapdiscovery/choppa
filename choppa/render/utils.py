@@ -1,9 +1,10 @@
 import MDAnalysis
 from MDAnalysis.lib.util import NamedStream
+from MDAnalysis.analysis import distances
+from MDAnalysis.core.groups import AtomGroup
 import pymol2
-from rdkit import Chem
+from Bio.PDB.PDBIO import PDBIO
 
-import os
 from io import StringIO
 import warnings
 import tempfile
@@ -24,6 +25,18 @@ def get_ligand_resnames_from_pdb_str(PDB_str, remove_solvent=True):
         ag = u.select_atoms("not protein")
     resnames = set(ag.resnames)
     return list(resnames)
+
+def biopython_to_mda(BP_complex):
+    """
+    Converts a biopython protein object to an MDAnalysis one.
+    """
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        io=PDBIO()
+        io.set_structure(BP_complex)
+        io.save(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
+
+        u = MDAnalysis.Universe(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
+    return u   
 
 def get_pdb_components(PDB_str, remove_solvent=True):
     """
@@ -132,7 +145,42 @@ def show_contacts(
     )
     pymol_instance.cmd.set("dash_radius", "0.09", contacts_name)
     pymol_instance.cmd.set("dash_color", "green", contacts_name)
-    pymol_instance.cmd.hide("labels", contacts_name) 
+    pymol_instance.cmd.hide("labels", contacts_name)
 
     return True
 
+def get_contacts_mda(
+    complex,
+    bigcutoff=4.1, # for some reason MDA needs a little 0.1A nudge to agree with PyMOL measurements 
+    remove_solvent=True,
+):
+    """
+    Use MDAnalysis to generate a dictionary of distance endpoint xyz coordinates between atoms in the ligand
+    and protein residues.
+    """
+    contacts = []
+    u = biopython_to_mda(complex)
+    if remove_solvent:
+        u = u.select_atoms("not (name H* or type OW)")
+    
+    lig = u.select_atoms("not protein")
+    prot = u.select_atoms("protein")
+
+    distances_array = distances.distance_array(AtomGroup(lig), AtomGroup(prot))
+    distances_array_within_cutoff = distances_array <= bigcutoff # makes the NxM array be boolean based on cutoff
+
+    for contacted_lig_at, protein_sequence_distance_bool in zip(lig, distances_array_within_cutoff):
+        # for this atom in the ligand, find any protein atoms that are True (i.e. below cutoff)
+        contacted_res_ats = [prot[i] for i, contact in enumerate(protein_sequence_distance_bool) if contact]
+
+        for contacted_res_at in contacted_res_ats:
+            # we only want to show HBD/HBA
+            if contacted_lig_at.type == "N" and contacted_res_at.type == "O" or \
+                            contacted_lig_at.type == "O" and contacted_res_at.type == "N":
+                contacts.append([contacted_lig_at, contacted_res_at])
+    
+    return contacts
+        
+
+        
+            

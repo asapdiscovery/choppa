@@ -200,7 +200,7 @@ if (atom.chain){
                          viewer.setHoverDuration(100); // makes resn popup instant on hover
                      
                          //////////////// add protein-ligand interactions
-                         var intn_dict = {'0_MET165.A': {'lig_at_x': '11.594', 'lig_at_y': '-1.029', 'lig_at_z': '22.265', 'prot_at_x': '12.038', 'prot_at_y': '1.138', 'prot_at_z': '19.397', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '1_GLU166.A': {'lig_at_x': '5.139', 'lig_at_y': '1.557', 'lig_at_z': '19.297', 'prot_at_x': '7.624', 'prot_at_y': '4.118', 'prot_at_z': '18.338', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '2_GLU166.A': {'lig_at_x': '9.020', 'lig_at_y': '1.593', 'lig_at_z': '21.267', 'prot_at_x': '9.672', 'prot_at_y': '2.793', 'prot_at_z': '18.548', 'type': 'hydrogen_bond', 'color': '#008000'}, '3_HIS41.A': {'lig_at_x': '12.093', 'lig_at_y': '0.095', 'lig_at_z': '22.863', 'prot_at_x': '11.997', 'prot_at_y': '-5.242', 'prot_at_z': '21.702', 'type': 'pi_stack', 'color': '#ffffff'}}
+                         var intn_dict = {{INTN_DICT_INSERT}}
                          for (const [_, intn] of Object.entries(intn_dict)) {
                              viewer.addCylinder({start:{x:parseFloat(intn["lig_at_x"]),y:parseFloat(intn["lig_at_y"]),z:parseFloat(intn["lig_at_z"])},
                                                      end:{x:parseFloat(intn["prot_at_x"]),y:parseFloat(intn["prot_at_y"]),z:parseFloat(intn["prot_at_z"])},

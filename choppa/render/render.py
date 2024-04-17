@@ -4,11 +4,22 @@ from rdkit import Chem
 import math 
 from tqdm import tqdm
 
-from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str, split_pdb_str
+from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str, split_pdb_str, get_contacts_mda, biopython_to_mda
 from choppa.render.logoplots import LogoPlot, WHITE_EMPTY_SQUARE, render_singleres_logoplot
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
+
+HEX_COLOR_CODES = [
+        "#ffffff",
+        "#ff9e83",
+        "#ff8a6c",
+        "#ff7454",
+        "#ff5c3d",
+        "#ff3f25",
+        "#ff0707",
+        "#642df0",
+    ]
 
 class PublicationView():
     """
@@ -117,6 +128,7 @@ class PublicationView():
 
         # first get the fitness degree per residue and what colors to make them
         residue_mutability_levels, mutability_color_dict = self.pymol_color_coder()
+        self.residue_mutability_levels = residue_mutability_levels
 
         # now select the residues, name them and color them.
         for fitness_degree, residues in residue_mutability_levels.items():
@@ -247,7 +259,7 @@ class InteractiveView():
         self.fitness_dict = filled_aligned_fitness_dict
         self.complex = complex
         self.fitness_threshold = fitness_threshold
-        self.output_session_file = output_session_file
+        self.output_session_file = output_session_file        
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
@@ -320,17 +332,7 @@ class InteractiveView():
         """
         Based on fitness coloring, creates a dict where keys are colors, values are residue numbers.
         """
-        hex_color_codes = [
-                "#ffffff",
-                "#ff9e83",
-                "#ff8a6c",
-                "#ff7454",
-                "#ff5c3d",
-                "#ff3f25",
-                "#ff0707",
-                "#642df0",
-            ]
-        color_res_dict = { color:[] for color in hex_color_codes }
+        color_res_dict = { color:[] for color in HEX_COLOR_CODES }
         for resindex, fitness_data in self.fitness_dict.items():
             if not 'mutants' in fitness_data: 
                 # no fitness data for this residue after alignment between Fitness CSV and input PDB
@@ -338,9 +340,9 @@ class InteractiveView():
                 continue
             fit_mutants = [mut for mut in fitness_data['mutants'] if mut['fitness'] > self.fitness_threshold]
             if len(fit_mutants) <= 6: # color by increasing redness the more fit mutants there are
-                color_res_dict[hex_color_codes[len(fit_mutants)]].append(resindex)
+                color_res_dict[HEX_COLOR_CODES[len(fit_mutants)]].append(resindex)
             else: # if there are more than 5 fit mutants just color it the most red - super mutable in any case
-                color_res_dict[hex_color_codes[6]].append(resindex)
+                color_res_dict[HEX_COLOR_CODES[6]].append(resindex)
 
         return color_res_dict
 
@@ -377,13 +379,40 @@ class InteractiveView():
     def get_interaction_dict(self):
         """
         Generates interactions to be displayed on the interactive HTML view. Interactions are colored
-        by the same rules as for PyMOL (`render.PublicationView()`).
+        by the same rules as for PyMOL (`render.PublicationView()`), but a dict of interactions is 
+        used which is generated in `render.PublicationView().pymol_add_interactions()`.
         """
+        intn_dict = {}
+        intn_count = 0
+        get_contacts_mda(self.complex)
 
-        """
-        intn_dict = {'0_MET165.A': {'lig_at_x': '11.594', 'lig_at_y': '-1.029', 'lig_at_z': '22.265', 'prot_at_x': '12.038', 'prot_at_y': '1.138', 'prot_at_z': '19.397', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '1_GLU166.A': {'lig_at_x': '5.139', 'lig_at_y': '1.557', 'lig_at_z': '19.297', 'prot_at_x': '7.624', 'prot_at_y': '4.118', 'prot_at_z': '18.338', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '2_GLU166.A': {'lig_at_x': '9.020', 'lig_at_y': '1.593', 'lig_at_z': '21.267', 'prot_at_x': '9.672', 'prot_at_y': '2.793', 'prot_at_z': '18.548', 'type': 'hydrogen_bond', 'color': '#008000'}, '3_HIS41.A': {'lig_at_x': '12.093', 'lig_at_y': '0.095', 'lig_at_z': '22.863', 'prot_at_x': '11.997', 'prot_at_y': '-5.242', 'prot_at_z': '21.702', 'type': 'pi_stack', 'color': '#ffffff'}}
-        """
+        for contact in get_contacts_mda(self.complex):
+            # first find the color. 
+            contact_color = [ k for k,v in self.get_surface_coloring_dict().items() if contact[1].resid in v ]
 
+            # check if the residue atom is in backbone, if so just overwrite the color to make the 
+            # contact color green. 
+            backbone_atoms = [ res for res in \
+                                    biopython_to_mda(self.complex).select_atoms("protein and backbone") ]
+            if contact[1] in backbone_atoms:
+                contact_color = ["#047b14"] # green
+
+            # then get the coordinates for the atoms involved; add to intn_dict
+            # while also prepending with an index so that we don't overwrite 
+            # interactions purely keyed on residue alone (one res can have multiple
+            # interactions).
+            intn_dict[f"{intn_count}_{contact[1].resname}{contact[1].resid}"] = {
+                'lig_at_x' : contact[0].position[0],
+                'lig_at_y' : contact[0].position[1],
+                'lig_at_z' : contact[0].position[2], 
+                'prot_at_x' : contact[1].position[0],
+                'prot_at_y' : contact[1].position[1],
+                'prot_at_z' : contact[1].position[2],
+                'color' : contact_color[0]
+            }
+            intn_count += 1
+
+        return intn_dict
 
     def inject_stuff_in_template(self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template="Template.html", out_file="out.html"):
         """"
@@ -435,11 +464,9 @@ class InteractiveView():
                     line = line.replace("{{SURFACE_COLOR_INSERT}}", surface_coloring)
 
                     # finally add interactions
-
-                    fout.write(line)
-                
-    
-                  
+                    if "{{INTN_DICT_INSERT}}" in line:
+                        line = line.replace("{{INTN_DICT_INSERT}}", str(self.get_interaction_dict()))
+                    fout.write(line)              
         
 
     def render(self):
@@ -452,15 +479,16 @@ class InteractiveView():
         # Plus, this makes the multithreading easier to debug as there are fewer layers.
         logoplot_dict = self.get_logoplot_dict(confidence_lims)
 
-        # get the strings for the PDB (prot) and the SDF (lig, if present) 
+        # # get the strings for the PDB (prot) and the SDF (lig, if present) 
         lig_sdf_str, prot_pdb_str = split_pdb_str(self.complex_pdb_str)
 
-        # define the coloring of the surface
+        # # define the coloring of the surface
         surface_coloring = self.surface_coloring_dict_to_js(self.get_surface_coloring_dict())
-        # define the interactions to show
-        pass
 
-        # # do a dirty HTML generation using the logoplot and fitness dicts.
+        # define the interactions to show contacts between ligand and protein
+        self.get_interaction_dict()
+
+        # do a dirty HTML generation using the logoplot and fitness dicts.
         self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, surface_coloring, logoplot_dict)       
         
         
@@ -483,11 +511,11 @@ if __name__ == "__main__":
     from choppa.align.align import AlignFactory
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
-    # PublicationView(filled_aligned_fitness_dict, 
-    #       complex,
-    #       complex_rdkit,
-    #       fitness_threshold=0.7).render()
-
+    PublicationView(filled_aligned_fitness_dict, 
+          complex,
+          complex_rdkit,
+          fitness_threshold=0.7).render()
+    
     InteractiveView(filled_aligned_fitness_dict, 
           complex,
           complex_rdkit,
