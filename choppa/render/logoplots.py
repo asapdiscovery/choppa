@@ -30,6 +30,41 @@ LOGOPLOT_WITHOUT_CONF_COLORSCHEME = { # see https://github.com/jbkinney/logomake
         'Y': '#84380b',
         'X': '#000000', # add 'X' so that LogoMaker doesn't log to stdout
     }
+WHITE_EMPTY_SQUARE = "iVBORw0KGgoAAAANSUhEUgAAAJYAAACfCAIAAACUbLd9AAAACXBIWXMAAAsTAAALEwEAmpwYAAABhElEQVR4nO3RwQkAIBDAMHX/nc8hfEghmaDQPTOLsvM7gFcW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5l1WGwQ7i50I0AAAAABJRU5ErkJggg=="
+
+def render_singleres_logoplot(res):
+    """
+    Renders a simple, single-letter 'logoplot', normally for showing the wildtype residue. The plot
+    is square and is typically rendered top center downstream.
+    """
+    _, ax = plt.subplots(figsize=(4, 4))
+
+    # create Logo object
+    logomaker.Logo(
+        pd.DataFrame({res:1}, index=[0]),
+        font_name="Sans Serif",
+        color_scheme=LOGOPLOT_WITHOUT_CONF_COLORSCHEME,
+        flip_below=False,
+        show_spines=True,
+        ax=ax
+    )
+
+    plt.xticks([])
+    plt.yticks([])
+    # plt.savefig("debug_logoplot.png", dpi=70, bbox_inches="tight") # uncomment for testing
+    # plt object directly to base64 string instead of tmpfile
+    lp_bytes = io.BytesIO()
+    plt.savefig(
+        lp_bytes,  
+        format='png', 
+        dpi=70, # DPI 70 seems to be ~smallest we can get away with
+        bbox_inches="tight",
+        )
+    lp_bytes.seek(0)
+    lp_base64 = base64.b64encode(lp_bytes.read())
+    plt.close()
+
+    return lp_base64 
 
 class LogoPlot():
     """
@@ -70,8 +105,8 @@ class LogoPlot():
                 else:
                     fit_mutants[mutant['aa']] = [mutant['fitness']]
 
-        return {wildtype: wildtype_fitness}, unfit_mutants, fit_mutants
-    
+        return {wildtype: wildtype_fitness}, unfit_mutants, fit_mutants  
+
     def render_logoplot(self, mutants, global_min_confidence=False, global_max_confidence=False, lhs=True, wildtype=False):
         """
         Creates a logoplot as a base64 string. Also annotes with confidence values if present.
@@ -80,7 +115,7 @@ class LogoPlot():
         """  
         if len(mutants) == 0:
             # this can happen when there are no mutants in this category. Return an empty white-sqare base64 instead.
-            return "iVBORw0KGgoAAAANSUhEUgAAAJYAAACfCAIAAACUbLd9AAAACXBIWXMAAAsTAAALEwEAmpwYAAABhElEQVR4nO3RwQkAIBDAMHX/nc8hfEghmaDQPTOLsvM7gFcW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5l1WGwQ7i50I0AAAAABJRU5ErkJggg=="
+            return WHITE_EMPTY_SQUARE
         plt.switch_backend('Agg') # prevents plt from opening a figure on OS
         if wildtype: # we want this to be a bit smaller and square because it'll always have 1 residue.
             _, ax = plt.subplots(figsize=(4, 4))

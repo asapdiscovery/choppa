@@ -1,13 +1,12 @@
 import logging, sys
 import pymol2
-from io import StringIO
 from rdkit import Chem
 import math 
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from tqdm import tqdm
 
 from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str, split_pdb_str
-from choppa.render.logoplots import LogoPlot
+from choppa.render.logoplots import LogoPlot, WHITE_EMPTY_SQUARE, render_singleres_logoplot
+
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
 
@@ -288,15 +287,15 @@ class InteractiveView():
         else:
             for idx, residue_fitness_dict in tqdm(self.fitness_dict.items()):
                 
-                # catch if res has no fitness, would throw an error in logoplot generation.
+                # catch if res has no fitness, create empty logoplots instead (but show the wildtype)
                 if not 'aa' in residue_fitness_dict['wildtype']:
                     logoplot_dict[idx] = {
                     'fitness_aligned_index': idx, 
                     'fitness_csv_index': idx,
                     'logoplots_base64' : {
-                        'wildtype' : "",
-                        'fit' : "",
-                        'unfit' : ""
+                        'wildtype' : render_singleres_logoplot("".join(residue_fitness_dict['wildtype'])),
+                        'fit' : WHITE_EMPTY_SQUARE,
+                        'unfit' : WHITE_EMPTY_SQUARE,
                     }}
                     continue
 
@@ -317,10 +316,76 @@ class InteractiveView():
                 
         return logoplot_dict
     
-    # also add in interactions dict
+    def get_surface_coloring_dict(self):
+        """
+        Based on fitness coloring, creates a dict where keys are colors, values are residue numbers.
+        """
+        hex_color_codes = [
+                "#ffffff",
+                "#ff9e83",
+                "#ff8a6c",
+                "#ff7454",
+                "#ff5c3d",
+                "#ff3f25",
+                "#ff0707",
+                "#642df0",
+            ]
+        color_res_dict = { color:[] for color in hex_color_codes }
+        for resindex, fitness_data in self.fitness_dict.items():
+            if not 'mutants' in fitness_data: 
+                # no fitness data for this residue after alignment between Fitness CSV and input PDB
+                color_res_dict["#642df0"].append(resindex) # makes residue surface blue
+                continue
+            fit_mutants = [mut for mut in fitness_data['mutants'] if mut['fitness'] > self.fitness_threshold]
+            if len(fit_mutants) <= 6: # color by increasing redness the more fit mutants there are
+                color_res_dict[hex_color_codes[len(fit_mutants)]].append(resindex)
+            else: # if there are more than 5 fit mutants just color it the most red - super mutable in any case
+                color_res_dict[hex_color_codes[6]].append(resindex)
+
+        return color_res_dict
+
+    def surface_coloring_dict_to_js(self, color_res_dict):
+        """
+        Transforms a dictionary of residue indices per color (hex) to a JavaScript-compatible
+        string.
+        """
+        residue_coloring_function_js = ""
+        start = True
+        for color, residues in color_res_dict.items():
+            residues = [
+                f"'{res}'" for res in residues
+            ]  # need to wrap the string in quotes *within* the JS code
+            if start:
+                residue_coloring_function_js += (
+                    "if (["
+                    + ",".join(residues)
+                    + "].includes(atom_residx)){ \n return '"
+                    + color
+                    + "' \n "
+                )
+                start = False
+            else:
+                residue_coloring_function_js += (
+                    "} else if (["
+                    + ",".join(residues)
+                    + "].includes(atom_residx)){ \n return '"
+                    + color
+                    + "' \n "
+                )
+        return residue_coloring_function_js
+
+    def get_interaction_dict(self):
+        """
+        Generates interactions to be displayed on the interactive HTML view. Interactions are colored
+        by the same rules as for PyMOL (`render.PublicationView()`).
+        """
+
+        """
+        intn_dict = {'0_MET165.A': {'lig_at_x': '11.594', 'lig_at_y': '-1.029', 'lig_at_z': '22.265', 'prot_at_x': '12.038', 'prot_at_y': '1.138', 'prot_at_z': '19.397', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '1_GLU166.A': {'lig_at_x': '5.139', 'lig_at_y': '1.557', 'lig_at_z': '19.297', 'prot_at_x': '7.624', 'prot_at_y': '4.118', 'prot_at_z': '18.338', 'type': 'hydrophobic_interaction', 'color': '#ffffff'}, '2_GLU166.A': {'lig_at_x': '9.020', 'lig_at_y': '1.593', 'lig_at_z': '21.267', 'prot_at_x': '9.672', 'prot_at_y': '2.793', 'prot_at_z': '18.548', 'type': 'hydrogen_bond', 'color': '#008000'}, '3_HIS41.A': {'lig_at_x': '12.093', 'lig_at_y': '0.095', 'lig_at_z': '22.863', 'prot_at_x': '11.997', 'prot_at_y': '-5.242', 'prot_at_z': '21.702', 'type': 'pi_stack', 'color': '#ffffff'}}
+        """
 
 
-    def inject_stuff_in_template(self, sdf_str, pdb_str, logoplot_dict, template="Template.html", out_file="out.html"):
+    def inject_stuff_in_template(self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template="Template.html", out_file="out.html"):
         """"
         Replaces parts of a template HTML with relevant bits of data to get to a HTML view
         of the (ligand-) protein, its fitness and its interactions (if any).
@@ -364,16 +429,15 @@ class InteractiveView():
                     line = line.replace("{{SDF_INSERT}}", f"{sdf_str}")
                                 
                     # logoplots are a bit more complicated, need to add all those DIVs
-                    if "{{LOGOPLOTS_INSERTS}}" in line:
-                        line = line.replace("{{LOGOPLOTS_INSERTS}}", logoplot_divs)
+                    line = line.replace("{{LOGOPLOTS_INSERTS}}", logoplot_divs)
 
-                    # add in interactions
+                    # add in surface coloring
+                    line = line.replace("{{SURFACE_COLOR_INSERT}}", surface_coloring)
+
+                    # finally add interactions
+
                     fout.write(line)
-        
-        # then add interactions
-
-        # then add surface coloring
-                   
+                
     
                   
         
@@ -391,8 +455,15 @@ class InteractiveView():
         # get the strings for the PDB (prot) and the SDF (lig, if present) 
         lig_sdf_str, prot_pdb_str = split_pdb_str(self.complex_pdb_str)
 
-        # do a dirty HTML generation using the logoplot and fitness dicts.
-        self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, logoplot_dict)
+        # define the coloring of the surface
+        surface_coloring = self.surface_coloring_dict_to_js(self.get_surface_coloring_dict())
+        # define the interactions to show
+        pass
+
+        # # do a dirty HTML generation using the logoplot and fitness dicts.
+        self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, surface_coloring, logoplot_dict)       
+        
+        
 
 
 
@@ -403,8 +474,8 @@ if __name__ == "__main__":
 
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
-    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_COMPLETE, 
-                                    confidence_colname="confidence"
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
+                                    # confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
