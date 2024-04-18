@@ -19,3 +19,6 @@ TOY_FITNESS_DATA_TRUNCATED = pkg_resources.resource_filename(
 TOY_FITNESS_DATA_SECTIONED = pkg_resources.resource_filename(
     __name__, "toy_fitness_data_03_sectioned.csv"
 )
+TOY_HYLO_DATA = pkg_resources.resource_filename(
+    __name__, "toy_phylo_fitness_data.json"
+)

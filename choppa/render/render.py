@@ -492,10 +492,6 @@ class InteractiveView():
         self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, surface_coloring, logoplot_dict)       
         
         
-
-
-
-
 if __name__ == "__main__":
     from choppa.data.toy_data.resources import TOY_COMPLEX, TOY_FITNESS_DATA_COMPLETE, TOY_FITNESS_DATA_TRUNCATED
     from choppa.data.toy_data.resources import TOY_FITNESS_DATA_SECTIONED, TOY_FITNESS_DATA_COMPLETE_NOCONF
@@ -503,7 +499,7 @@ if __name__ == "__main__":
     from choppa.IO.input import FitnessFactory, ComplexFactory
 
     fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED, 
-                                    # confidence_colname="confidence"
+                                    confidence_colname="confidence"
                                     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()

@@ -15,6 +15,9 @@ dependencies:
   - click
   - mdanalysis
 
+  # CLI
+  - click
+  
   # visualizations
   - pymol-open-source
   - pyqt
