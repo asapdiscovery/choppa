@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.entry-points.console_scripts]
-choppa = "choppa.cli:cli"
+choppa = "choppa.cli.cli:cli"
 
 
 # Update the urls once the hosting is set up.
