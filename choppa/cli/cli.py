@@ -1,20 +1,133 @@
 import click
+from typing import Optional
 
+from choppa.IO.input import FitnessFactory, ComplexFactory
+from choppa.align.align import AlignFactory
+from choppa.render.render import PublicationView, InteractiveView
 
 @click.group()
 @click.version_option()
 def cli():
-    "Demo of click-app-template-repository"
+    "Integrated mutational and structural biology data into a concerted HTML view."
 
-@cli.command(name="command")
-@click.argument(
-    "example"
+@cli.command(name="render", help="Create fitness view as a publication-ready PyMOL session file and a read-for-sharing interactive HTML file. ", short_help="Create fitness view as a publication-ready PyMOL session file and a read-for-sharing interactive HTML file.")
+@click.option(
+    "-p",
+    "--pdb-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, writable=True),
+    help="Path to a PDB file to create fitness view for.",
+    required=True,
 )
 @click.option(
-    "-o",
-    "--option",
-    help="An example option",
+    "-f",
+    "--fitness-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, writable=True),
+    help="Path to a CSV file with fitness data to create fitness view for.",
+    required=True,
 )
-def first_command(example, option):
-    "Command description goes here"
-    click.echo("Here is some output")
+@click.option(
+    "-op",
+    "--outfile-publication",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Name of output file to write publication-ready PyMOL session file to. Should end in '.pse'",
+    required=True,
+)
+@click.option(
+    "-oi",
+    "--outfile-interactive",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Name of output file to write ready-to-share interactive HTML file to. Should end in '.html'",
+    required=True,
+)
+@click.option(
+    "-f",
+    "--fitness-file",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, writable=True),
+    help="Path to a CSV file with fitness data to create fitness view for.",
+    required=True,
+)
+@click.option(
+    "-f",
+    "--fitness-file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Path to a CSV file with fitness data to create fitness view for.",
+    required=True,
+)
+@click.option(
+    "-f",
+    "--fitness-file",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Path to a CSV file with fitness data to create fitness view for.",
+    required=True,
+)
+@click.option(
+    "-fv",
+    "--fitness-column",
+    type=click.STRING,
+    help="Name of the column in the fitness-file (-f/--fitness-file) that contains fitness values (e.g. LogEffect). If not defined, will default to 'fitness'.",
+    required=False,
+)
+@click.option(
+    "-ri",
+    "--residue-index-column",
+    type=click.STRING,
+    help="Name of the column in the fitness-file (-f/--fitness-file) that contains residue indices (e.g. 1, 2, .. n). If not defined, will default to 'residue_index'.",
+    required=False,
+)
+@click.option(
+    "-wt",
+    "--wildtype-column",
+    type=click.STRING,
+    help="Name of the column in the fitness-file (-f/--fitness-file) that contains wildtype residues (e.g. L, G, N). If not defined, will default to 'wildtype'.",
+    required=False,
+)
+@click.option(
+    "-mu",
+    "--mutant-column",
+    type=click.STRING,
+    help="Name of the column in the fitness-file (-f/--fitness-file) that contains mutant residues (e.g. L, G, N). If not defined, will default to 'mutant'.",
+    required=False,
+)
+@click.option(
+    "-c",
+    "--confidence-column",
+    type=click.STRING,
+    help="Name of the column in the fitness-file (-f/--fitness-file) that contains confidence values (e.g. counts). If not defined then LogoPlots in the HTML view will not display confidences.",
+    required=False,
+)
+def render(
+    pdb_file: Optional[str] = None,
+    fitness_file: Optional[str] = None,
+    outfile_publication: Optional[str] = None,
+    outfile_interactive: Optional[str] = None,
+    fitness_column : Optional[str] = None,
+    residue_index_column : Optional[str] = None,
+    wildtype_column : Optional[str] = None,
+    mutant_column : Optional[str] = None,
+    confidence_column : Optional[str] = None,
+    ):
+    
+    if not outfile_publication[-4:] == ".pse":
+        raise ValueError("--op/--outfile-publication should end in '.pse'.")
+    elif not outfile_interactive[-5:] == ".html":
+        raise ValueError("--oi/--outfile-interactive should end in '.html'.")
+
+    fitness_dict = FitnessFactory(fitness_file, 
+                                    confidence_colname=confidence_column
+                                    ).get_fitness_basedict()
+    complex = ComplexFactory(pdb_file).load_pdb()
+    complex_rdkit = ComplexFactory(pdb_file).load_pdb_rdkit()
+
+    filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+
+    PublicationView(filled_aligned_fitness_dict, 
+          complex,
+          complex_rdkit,
+          fitness_threshold=0.7,
+          output_session_file=outfile_publication).render()
+    
+    InteractiveView(filled_aligned_fitness_dict, 
+          complex,
+          complex_rdkit,
+          fitness_threshold=0.7,
+          output_session_file=outfile_interactive).render()

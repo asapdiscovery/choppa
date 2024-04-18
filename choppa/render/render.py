@@ -6,6 +6,7 @@ from tqdm import tqdm
 
 from choppa.render.utils import show_contacts, get_ligand_resnames_from_pdb_str, split_pdb_str, get_contacts_mda, biopython_to_mda
 from choppa.render.logoplots import LogoPlot, WHITE_EMPTY_SQUARE, render_singleres_logoplot
+from choppa.data.templates.resources import HTML_TEMPLATE
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
@@ -414,7 +415,7 @@ class InteractiveView():
 
         return intn_dict
 
-    def inject_stuff_in_template(self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template="Template.html", out_file="out.html"):
+    def inject_stuff_in_template(self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template=HTML_TEMPLATE):
         """"
         Replaces parts of a template HTML with relevant bits of data to get to a HTML view
         of the (ligand-) protein, its fitness and its interactions (if any).
@@ -452,7 +453,7 @@ class InteractiveView():
                         
         # add the PDB (protein) and SDF (ligand)
         with open(template, "rt") as fin:
-            with open(out_file, "wt") as fout:
+            with open(self.output_session_file, "wt") as fout:
                 for line in fin:
                     line = line.replace("{{PDB_INSERT}}", f"{pdb_str}")
                     line = line.replace("{{SDF_INSERT}}", f"{sdf_str}")

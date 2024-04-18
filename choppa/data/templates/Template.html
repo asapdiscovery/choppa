@@ -1,0 +1,223 @@
+<!DOCTYPE HTML>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <script crossorigin="anonymous" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js"></script>
+    <script crossorigin="anonymous" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js"></script>
+    <link crossorigin="anonymous" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" rel="stylesheet" />
+    <script src="https://3Dmol.csb.pitt.edu/build/3Dmol-min.js"></script>
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+    <style>
+      /* Dropdown Button */
+      .dropbtn {
+        background-color: #04AA6D;
+        color: white;
+        padding: 16px;
+        font-size: 16px;
+        border: none;
+        border-radius: 5;
+      }
+
+      /* The container <div> - needed to position the dropdown content */
+      .dropdown {
+        position: absolute;
+        display: inline-block;
+        left: 1%;
+        top: 1%;
+      }
+      .dropdown_ctcs {
+        position: absolute;
+        top: 7%;
+        left: 1%;
+        display: inline-block;
+      }
+
+  .dropdown_lgplts {
+        position: absolute;
+        top: 13%;
+        left: 1%;
+        display: inline-block;
+      }
+
+    /* Dropdown Content (Hidden by Default) */
+      .dropdown-content {
+        display: none;
+        position: relative;
+        background-color: #f1f1f1;
+        min-width: 160px;
+        box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+        z-index: 1;
+      }
+
+      /* Links inside the dropdown */
+      .dropdown-content a {
+        color: black;
+        padding: 12px 16px;
+        text-decoration: none;
+        display: block;
+        cursor: default;
+      }
+                                                              
+      /* Show the dropdown menu on hover */
+      .dropdown:hover .dropdown-content {display: block;}
+      .dropdown_ctcs:hover .dropdown-content {display: block;}
+   .dropdown_lgplts:hover .dropdown-content {display: block;}
+   
+      /* Change the background color of the dropdown button when the dropdown content is shown */
+      .dropdown:hover .dropbtn {background-color: #3e8e41;}
+    
+
+      .viewerbox {
+        position: absolute;
+        width: 200px;
+        height: 100px;
+        padding: 10px;
+      }
+      .logoplotbox_wt {
+        position: absolute;
+        top: 1%;
+        right:45%;
+        border: 5px solid black;
+      }
+      .logoplotbox_unfit {
+        position: absolute;
+        top: 35%;
+        right:1%;
+        border: 5px solid black;
+      }
+      .logoplotbox_fit {
+        position: absolute;
+        top: 35%;
+        left:1%;
+        border: 5px solid black;
+      }
+    </style>
+    <!-- wrap the main JS block to please the frontend gods -->
+    <div class="box">
+      <div id="gldiv" style="width: 100vw; height: 100vh;"></div>
+    </div>
+    <!-- show the top dropdown (surfaces) -->
+    <div class="dropdown">
+      <button class="dropbtn">Surface coloration</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Protein residue surfaces are colored by mutability:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">⚪ : No amino acid substitutions tolerated</a>
+        <a href="#">🔴 : increasing tolerance for amino acid substitutions (increasing with 🔴 intensity)</a>
+        <a href="#">🟣 : No data for residue</a>
+      </div>
+    </div>
+    <!-- show the bottom dropdown (contacts) -->
+    <div class="dropdown_ctcs">
+      <button class="dropbtn">Ligand-protein contacts</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Ligand-protein contacts are shown as dashed lines colored by:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">⬜ : Ligand contact is with amino acid side chain that has no tolerated substitutions</a>
+        <a href="#">🟩 : Ligand contact is with peptide backbone</a>
+        <a href="#">🟥 : Ligand contact is with amino acid side chain that has tolerated substitutions (increasing with 🔴 intensity)</a>
+        <a href="#">🟪 : No data for contacted residue</a>
+      </div>
+    </div>
+    <!-- show the bottom dropdown (logoplots) -->
+    <div class="dropdown_lgplts">
+      <button class="dropbtn">Logo Plots</button>
+      <div class="dropdown-content" style="text-align: center">
+        <a href="#">Fitness logo plots are shown on hover of residue atoms:</a>
+      </div>
+      <div class="dropdown-content">
+        <a href="#">Top: Wildtype of this residue; this should correspond to the residue type that is being hovered over in the 3D view.</a>
+        <a href="#">Left: amino acids at this position that are consistent with virus viability. Letter heights are scaled to  indicate<br />the fractions of the viable viral populations with the particular residue at this position</a>
+        <a href="#">Right: amino acids at this position that are present in the selected population at background frequencies,<br />and thus likely to be inconsistent with viral viability. Stop codons (*) can also be present in these populations<br />of unselected genomes</a>
+        <a href="#">Coloring: Residue letters are either colored by type or by confidence if your input fitness data contains a confidence column.<br />The right-hand-side logoplot displays the colorbar for the range of confidences.</a>
+      </div>
+    </div>
+    <!-- show logoplots per residue on hover -->
+    <!-- bake in the base64 divs of all the residues. -->
+    {{LOGOPLOTS_INSERTS}}
+  </head>
+  <script>
+    function showLogoPlots(resi) {
+        var z = document.getElementById("wtDIV_"+resi);
+        var x = document.getElementById("fitDIV_"+resi);
+        var y = document.getElementById("unfitDIV_"+resi);
+        z.style.display = "block";
+        x.style.display = "block";
+        y.style.display = "block";
+
+      }
+      function hideLogoPlots(resi) {
+        var z = document.getElementById("wtDIV_"+resi);
+        var x = document.getElementById("fitDIV_"+resi);
+        var y = document.getElementById("unfitDIV_"+resi);
+        z.style.display = "none";
+        x.style.display = "none";
+        y.style.display = "none";
+      }
+    var viewer=$3Dmol.createViewer($("#gldiv"));
+                     var prot_pdb = `{{PDB_INSERT}}`;
+                     var lig_sdf =`{{SDF_INSERT}}`;       
+                         //////////////// set up system
+                         viewer.addModel(prot_pdb, "pdb") 
+                         // set protein sticks and surface
+                         viewer.setStyle({model: 0}, {stick: {colorscheme: "whiteCarbon", radius:0.15}});
+                         // define a coloring function based on our residue ranges. We can't call .addSurface separate times because the surfaces won't be merged nicely. 
+                         var colorAsSnake = function(atom) {
+                          atom_residx = String(atom.resi)
+                                {{SURFACE_COLOR_INSERT}}
+                                          }};                         viewer.addSurface("MS", {colorfunc: colorAsSnake, opacity: 0.9}) 
+                     
+                         viewer.setStyle({bonds: 0}, {sphere:{radius:0.5}}); //water molecules
+                     
+                         viewer.addModel(lig_sdf, "sdf")   
+                         // set ligand sticks
+                         viewer.setStyle({model: -1}, {stick: {colorscheme: "pinkCarbon"}});
+                     
+                         ////////////////// enable show residue number on hover
+                         viewer.setHoverable({}, true,
+                         function (atom, viewer, event, container) {
+                             if (!atom.label) {
+                                 if (atom.chain === undefined){
+                                  display_str = 'LIGAND';
+                                } else {
+                                  display_str = atom.resn + atom.resi;showLogoPlots(atom.resi);
+                                }
+                                atom.label = viewer.addLabel(display_str, { position: atom, backgroundColor: 'mintcream', fontColor: 'black' });                             }
+                         },
+                         function (atom) {
+                             if (atom.label) {
+                                 viewer.removeLabel(atom.label);
+                                 delete atom.label;
+if (atom.chain){
+ hideLogoPlots(atom.resi);
+ }
+}
+                         }
+                         );
+                         viewer.setHoverDuration(100); // makes resn popup instant on hover
+                     
+                         //////////////// add protein-ligand interactions
+                         var intn_dict = {{INTN_DICT_INSERT}}
+                         for (const [_, intn] of Object.entries(intn_dict)) {
+                             viewer.addCylinder({start:{x:parseFloat(intn["lig_at_x"]),y:parseFloat(intn["lig_at_y"]),z:parseFloat(intn["lig_at_z"])},
+                                                     end:{x:parseFloat(intn["prot_at_x"]),y:parseFloat(intn["prot_at_y"]),z:parseFloat(intn["prot_at_z"])},
+                                                     radius:0.1,
+                                                     dashed:true,
+                                                     fromCap:2,
+                                                     toCap:2,
+                                                     color:intn["color"]},
+                                                     );
+                         }
+                     
+                         ////////////////// set the view correctly
+                         viewer.setBackgroundColor(0xffffffff);
+                         viewer.setView(
+                             [-20.57886926575674, 1.4522825208738426, -17.79941670319449, 77.15778084734526, -0.5549623159570264, -0.11539982591793649, 0.8088242618222696, -0.15653441006175986]
+                             )
+                        viewer.setZoomLimits(1,250) // prevent infinite zooming
+ viewer.render();
+  </script>
+</html>
