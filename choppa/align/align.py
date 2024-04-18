@@ -81,6 +81,11 @@ class AlignFactory():
         for _, fitness_data in self.fitness_input.items():
             # we build a new dict where keys are the aligned index, then the aligned/unaligned indices (provenance),
             # then wildtype data and then per-mutant fitness data
+
+            if not fitness_data['fitness_csv_index'] in alignment_dict.keys():
+                logger.warn(f"Fitness data found to have a residue (index {fitness_data['fitness_csv_index']}) not in the PDB - skipping.")
+                continue
+
             reset_dict[alignment_dict[fitness_data['fitness_csv_index']]] = \
             {'fitness_aligned_index' : alignment_dict[fitness_data['fitness_csv_index']], **fitness_data}
         

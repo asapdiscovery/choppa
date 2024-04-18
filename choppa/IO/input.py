@@ -30,6 +30,7 @@ class FitnessFactory():
             self.confidence_set = True
         else:
             self.confidence_set = False
+        self.fitness_df = None
    
     def check_validity(self, fitness_df):
         """
@@ -55,6 +56,9 @@ class FitnessFactory():
         # keep only the requested columns
         fitness_df = fitness_df[non_confidence_columns + [self.confidence_colname]]
 
+        # if residue_index is a float (ran into this use-case), convert to int.
+        fitness_df[self.resindex_colname] = fitness_df[self.resindex_colname].apply(np.int64)
+
         # check that there aren't any NaNs and that fitness (and confidence) data is scalar
         if fitness_df[non_confidence_columns].isnull().values.any():
             raise ValueError(f"Found missing values in input CSV: {fitness_df[fitness_df[non_confidence_columns].isnull().any(axis=1)]}")
@@ -65,7 +69,14 @@ class FitnessFactory():
                 if len(fitness_df[pd.to_numeric(fitness_df[self.confidence_colname], errors='coerce').isnull()]) > 0:
                     raise ValueError(f"Found non-numeric confidence values in input CSV: {fitness_df[pd.to_numeric(fitness_df[self.confidence_colname], errors='coerce').isnull()]}")
             
-        # if checks reach this point then the input data should be correctly formatted
+        # if checks reach this point then the input data should be correctly formatted. Rename and adopt.
+        fitness_df = fitness_df.rename(columns={
+            self.resindex_colname : "residue_index",
+            self.wildtype_colname : "wildtype",
+            self.mutant_colname : "mutant",
+            self.fitness_colname : "fitness",
+            })
+        self.fitness_df = fitness_df
         return True
     
     def read_fitness_csv(self):
@@ -83,8 +94,8 @@ class FitnessFactory():
         
         # check whether the CSV file is correct
         if self.check_validity(fitness_df):
-            logger.info(f"Successfully read fitness data:\n{fitness_df}")
-            return fitness_df
+            logger.info(f"Successfully read fitness data:\n{self.fitness_df}")
+            return self.fitness_df
         
     
     def get_fitness_basedict(self):
@@ -103,9 +114,9 @@ class FitnessFactory():
         
         """
         fitness_basedict = OrderedDict()
-        for residx, res_df in self.read_fitness_csv().groupby(by=self.resindex_colname):
+        for residx, res_df in self.read_fitness_csv().groupby(by="residue_index"):
             # first construct the dict entry for the wildtype
-            wildtype = res_df[self.wildtype_colname].values[0]
+            wildtype = res_df["wildtype"].values[0]
             wt_dict = {
                         "aa" : wildtype, 
                         "fitness" : res_df[res_df.mutant == wildtype]["fitness"].values[0],
@@ -114,9 +125,9 @@ class FitnessFactory():
             # now construct the mutant list of dict entries for this residue index while excluding wildtype
             mutant_list = []
             for mut, fitness, conf in res_df[[
-                    self.mutant_colname,
-                    self.fitness_colname,
-                    self.confidence_colname,
+                    "mutant",
+                    "fitness",
+                    "confidence",
                     ]].values:
                 if not mut == wildtype: # ignore wildtype entry
                     mutant_list.append({
@@ -166,6 +177,7 @@ class ComplexFactory():
         Loads an input PDB file 
         """
         complex = PDBParser(QUIET=False).get_structure("COMPLEX", self.path_to_pdb_file)
+
         self.check_validity(complex)
         return complex
 
@@ -173,7 +185,7 @@ class ComplexFactory():
         """
         Loads an input PDB file to an RDKit object for easier string retrieval
         """
-        return Chem.MolFromPDBFile(self.path_to_pdb_file)
+        return Chem.MolFromPDBFile(self.path_to_pdb_file, sanitize=False)
     
 
 if __name__ == "__main__":

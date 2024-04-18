@@ -34,6 +34,7 @@ class PublicationView():
         self.complex = complex
         self.fitness_threshold = fitness_threshold
         self.output_session_file = output_session_file
+        self.ligand_present = False # will turn to True if found.
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
@@ -156,13 +157,15 @@ class PublicationView():
         """
         ligands = get_ligand_resnames_from_pdb_str(self.complex_pdb_str)
         if ligands:
+            self.ligand_present = True
             # need to use the PyMOL DSL for selection. Construct the string first.
             ligand_selector = f"resn {ligands[0]}"
             for lig in ligands[1:]: # add additional ligand entries, if there are any
                 ligand_selector += f" and resn {lig}"
 
         # make the selections
-        p.cmd.select("ligand", ligand_selector)
+        if self.ligand_present:
+            p.cmd.select("ligand", ligand_selector)
         p.cmd.select( # PyMOL will have made only the protein cartoon, so can just select that way
             "receptor", "rep cartoon"
         )  
@@ -260,7 +263,8 @@ class InteractiveView():
         self.fitness_dict = filled_aligned_fitness_dict
         self.complex = complex
         self.fitness_threshold = fitness_threshold
-        self.output_session_file = output_session_file        
+        self.output_session_file = output_session_file
+        self.ligand_present = False # will turn to True if found.       
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
@@ -464,9 +468,12 @@ class InteractiveView():
                     # add in surface coloring
                     line = line.replace("{{SURFACE_COLOR_INSERT}}", surface_coloring)
 
-                    # finally add interactions
+                    # finally add interactions if there is a ligand present
                     if "{{INTN_DICT_INSERT}}" in line:
-                        line = line.replace("{{INTN_DICT_INSERT}}", str(self.get_interaction_dict()))
+                        if self.ligand_present:
+                            line = line.replace("{{INTN_DICT_INSERT}}", str(self.get_interaction_dict()))
+                        else:
+                            line = line.replace("{{INTN_DICT_INSERT}}", "{}") # ensures JS doesn't break.
                     fout.write(line)              
         
 
@@ -482,12 +489,10 @@ class InteractiveView():
 
         # # get the strings for the PDB (prot) and the SDF (lig, if present) 
         lig_sdf_str, prot_pdb_str = split_pdb_str(self.complex_pdb_str)
-
+        if lig_sdf_str:
+            self.ligand_present = True
         # # define the coloring of the surface
         surface_coloring = self.surface_coloring_dict_to_js(self.get_surface_coloring_dict())
-
-        # define the interactions to show contacts between ligand and protein
-        self.get_interaction_dict()
 
         # do a dirty HTML generation using the logoplot and fitness dicts.
         self.inject_stuff_in_template(lig_sdf_str, prot_pdb_str, surface_coloring, logoplot_dict)       

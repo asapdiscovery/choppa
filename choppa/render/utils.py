@@ -96,7 +96,10 @@ def split_pdb_str(PDB_str):
     TODO: set below functions through NamedStream instead of tmpdir
     """
     ligand_pdb, protein_pdb = get_pdb_components(PDB_str)
-    return process_ligand(ligand_pdb),  process_protein(protein_pdb)
+    if ligand_pdb:
+        return process_ligand(ligand_pdb),  process_protein(protein_pdb)
+    else:
+        return None,  process_protein(protein_pdb)
 
 def show_contacts(
     pymol_instance,

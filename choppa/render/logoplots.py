@@ -29,6 +29,7 @@ LOGOPLOT_WITHOUT_CONF_COLORSCHEME = { # see https://github.com/jbkinney/logomake
         'W': '#84380b',
         'Y': '#84380b',
         'X': '#000000', # add 'X' so that LogoMaker doesn't log to stdout
+        '*': '#000000', # add '*' so that LogoMaker doesn't log to stdout
     }
 WHITE_EMPTY_SQUARE = "iVBORw0KGgoAAAANSUhEUgAAAJYAAACfCAIAAACUbLd9AAAACXBIWXMAAAsTAAALEwEAmpwYAAABhElEQVR4nO3RwQkAIBDAMHX/nc8hfEghmaDQPTOLsvM7gFcW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5lmYZ2GehXkW5l1WGwQ7i50I0AAAAABJRU5ErkJggg=="
 

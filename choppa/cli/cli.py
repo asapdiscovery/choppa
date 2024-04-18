@@ -26,6 +26,13 @@ def cli():
     required=True,
 )
 @click.option(
+    "-ft",
+    "--fitness-threshold",
+    type=click.FLOAT,
+    help="Fitness threshold to determine whether a mutant is fit or not.",
+    required=True,
+)
+@click.option(
     "-op",
     "--outfile-publication",
     type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
@@ -98,6 +105,7 @@ def cli():
 def render(
     pdb_file: Optional[str] = None,
     fitness_file: Optional[str] = None,
+    fitness_threshold: Optional[float] = None,
     outfile_publication: Optional[str] = None,
     outfile_interactive: Optional[str] = None,
     fitness_column : Optional[str] = None,
@@ -112,7 +120,12 @@ def render(
     elif not outfile_interactive[-5:] == ".html":
         raise ValueError("--oi/--outfile-interactive should end in '.html'.")
 
-    fitness_dict = FitnessFactory(fitness_file, 
+    fitness_dict = FitnessFactory(
+                                    fitness_file,
+                                    resindex_colname=residue_index_column,
+                                    wildtype_colname=wildtype_column,
+                                    mutant_colname=mutant_column,
+                                    fitness_colname=fitness_column,
                                     confidence_colname=confidence_column
                                     ).get_fitness_basedict()
     complex = ComplexFactory(pdb_file).load_pdb()
@@ -123,11 +136,12 @@ def render(
     PublicationView(filled_aligned_fitness_dict, 
           complex,
           complex_rdkit,
-          fitness_threshold=0.7,
+          fitness_threshold=fitness_threshold,
           output_session_file=outfile_publication).render()
     
+    # TODO: add more logging in the below Class.
     InteractiveView(filled_aligned_fitness_dict, 
           complex,
           complex_rdkit,
-          fitness_threshold=0.7,
+          fitness_threshold=fitness_threshold,
           output_session_file=outfile_interactive).render()
