@@ -162,6 +162,8 @@ class PublicationView():
             ligand_selector = f"resn {ligands[0]}"
             for lig in ligands[1:]: # add additional ligand entries, if there are any
                 ligand_selector += f" and resn {lig}"
+        else:
+            logger.warn("WARNING: no ligands detected in PDB file.")
 
         # make the selections
         if self.ligand_present:
