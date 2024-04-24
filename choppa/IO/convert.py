@@ -20,7 +20,12 @@ def phylo_json_to_df(json_file, gene=None):
     fitness_df = pd.DataFrame(json.load(open(json_file))["data"])
 
     if gene:
+        print(f"Available genes: {set(fitness_df['gene'].values)}")
+
         fitness_df_for_gene = fitness_df[fitness_df["gene"] == gene]
+        fitness_df_for_gene = fitness_df_for_gene[
+            fitness_df_for_gene["site"].between(207, 379)
+        ]
         if len(fitness_df_for_gene) == 0:
             raise ValueError(f"Gene '{gene}' not found in data:\n{fitness_df}")
         else:
@@ -37,4 +42,6 @@ def nextstrain_to_csv(nextstrain_tsv):
 
 
 if __name__ == "__main__":
-    phylo_json_to_df(TOY_PHYLO_DATA, "nsp9")
+    phylo_json_to_df(TOY_PHYLO_DATA, "nsp3").to_csv(
+        "sars2_mpro_fitness.csv", index=False
+    )
