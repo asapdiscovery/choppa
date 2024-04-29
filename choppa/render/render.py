@@ -484,12 +484,12 @@ class InteractiveView:
         return intn_dict
 
     def inject_stuff_in_template(
-        self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template=HTML_TEMPLATE, LOGOPLOT_TEMPLATE=LOGOPLOT_TEMPLATE
-    ):
+        self, sdf_str, pdb_str, surface_coloring, logoplot_dict):
         """ "
         Replaces parts of a template HTML with relevant bits of data to get to a HTML view
         of the (ligand-) protein, its fitness and its interactions (if any).
-        TODO: HMO to replace this crude replacement code with `jinja`.
+
+        Uses Jinja2 templating to render based on static HTML template.
         """
         # create a bunch of DIVs of the logoplots.
         logoplot_divs = ""
