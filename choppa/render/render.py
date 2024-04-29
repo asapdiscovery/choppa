@@ -496,7 +496,6 @@ class InteractiveView:
         for _, logoplot_data in logoplot_dict.items():
             wt = logoplot_data["logoplots_base64"]["wildtype"]
             fit = logoplot_data["logoplots_base64"]["fit"]
-            print(type(fit))
             unfit = logoplot_data["logoplots_base64"]["unfit"]
             data = {"ID": logoplot_data["fitness_aligned_index"], "WT_BASE64_INSERT": wt.decode("ascii"), "FIT_BASE64_INSERT": fit.decode("ascii"), "UNFIT_BASE64_INSERT": unfit.decode("ascii")}
             logoplot_template_str = open(LOGOPLOT_TEMPLATE).read()
@@ -506,7 +505,7 @@ class InteractiveView:
         # add the PDB (protein) and SDF (ligand)
         intr_dct = str(self.get_interaction_dict()) if self.ligand_present else "{}"
 
-        data = {"PDB_INSERT": pdb_str, "SDF_INSERT": sdf_str, "LOGOPLOTS_INSERTS": logoplot_divs, "SURFACE_COLOR_INSERT": surface_coloring, "INTN_DICT_INSERT": "{}"}
+        data = {"PDB_INSERT": pdb_str, "SDF_INSERT": sdf_str, "LOGOPLOTS_INSERTS": logoplot_divs, "SURFACE_COLOR_INSERT": surface_coloring, "INTN_DICT_INSERT": intr_dct}
         # render the template with Jinja
         template_str = open(HTML_TEMPLATE).read()
         template = Template(template_str)
