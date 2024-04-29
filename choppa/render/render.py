@@ -339,11 +339,20 @@ class InteractiveView:
         logoplot_dict = {}
 
         if multiprocess:
+            logger.info("Using MultiProcessing")
             from concurrent.futures import ProcessPoolExecutor
-                # use multithreading to generate logoplots
-            with ProcessPoolExecutor(max_workers=max_workers) as executor:  # Use optimal thread pool size
+
+            # use multithreading to generate logoplots
+            with ProcessPoolExecutor(
+                max_workers=max_workers
+            ) as executor:  # Use optimal thread pool size
                 futures = {
-                    executor.submit(self._make_logoplot_residue, idx, residue_fitness_dict, confidence_lims)
+                    executor.submit(
+                        self._make_logoplot_residue,
+                        idx,
+                        residue_fitness_dict,
+                        confidence_lims,
+                    )
                     for idx, residue_fitness_dict in self.fitness_dict.items()
                 }
 
@@ -352,12 +361,13 @@ class InteractiveView:
                     try:
                         logoplot, idx = future.result()
                         logoplot_dict[idx] = logoplot
-                        progress_bar.update(1)  # Update progress bar for each completed task
+                        progress_bar.update(
+                            1
+                        )  # Update progress bar for each completed task
                     except Exception as e:
                         # Handle potential exceptions raised during thread execution
                         logger.error(f"Error generating logoplot: {e}")
                         progress_bar.update(1)  # Update progress bar even on error
-
 
         else:
             for idx, residue_fitness_dict in tqdm(self.fitness_dict.items()):
@@ -368,28 +378,30 @@ class InteractiveView:
                 logoplot_dict[idx] = logoplot
 
         # sort the logoplot dict by residue index so that the multiprocessed logoplots are in same order as
-        # if they were generated sequentially. 
+        # if they were generated sequentially.
         logoplot_dict = dict(sorted(logoplot_dict.items()))
 
         return logoplot_dict
-    
 
     def _make_logoplot_residue(self, idx, residue_fitness_dict, confidence_lims):
         """
         For a single residue, generate logoplots for wildtype, fit and unfit mutants.
         """
         if not "aa" in residue_fitness_dict["wildtype"]:
-            return ({
-                "fitness_aligned_index": idx,
-                "fitness_csv_index": idx,
-                "logoplots_base64": {
-                    "wildtype": render_singleres_logoplot(
-                        "".join(residue_fitness_dict["wildtype"])
-                    ),
-                    "fit": WHITE_EMPTY_SQUARE,
-                    "unfit": WHITE_EMPTY_SQUARE,
+            return (
+                {
+                    "fitness_aligned_index": idx,
+                    "fitness_csv_index": idx,
+                    "logoplots_base64": {
+                        "wildtype": render_singleres_logoplot(
+                            "".join(residue_fitness_dict["wildtype"])
+                        ),
+                        "fit": WHITE_EMPTY_SQUARE,
+                        "unfit": WHITE_EMPTY_SQUARE,
+                    },
                 },
-            }, idx)
+                idx,
+            )
 
         wildtype_base64, fit_base64, unfit_base64 = LogoPlot(
             residue_fitness_dict, fitness_threshold=self.fitness_threshold
@@ -398,17 +410,18 @@ class InteractiveView:
             global_max_confidence=confidence_lims[1],
         )
 
-        return ({
-            "fitness_aligned_index": residue_fitness_dict["fitness_aligned_index"],
-            "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
-            "logoplots_base64": {
-                "wildtype": wildtype_base64,
-                "fit": fit_base64,
-                "unfit": unfit_base64,
+        return (
+            {
+                "fitness_aligned_index": residue_fitness_dict["fitness_aligned_index"],
+                "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
+                "logoplots_base64": {
+                    "wildtype": wildtype_base64,
+                    "fit": fit_base64,
+                    "unfit": unfit_base64,
+                },
             },
-        },  idx)
-
-
+            idx,
+        )
 
     def get_surface_coloring_dict(self):
         """
