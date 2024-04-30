@@ -40,7 +40,6 @@ def biopython_to_mda(BP_complex):
         io.save(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
 
         u = MDAnalysis.Universe(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
-        tempfile.close()
     return u
 
 
@@ -87,7 +86,6 @@ def process_ligand(ligand):
             f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.sdf", "r"
         ) as f:
             string = f.read()
-        tempfile.close()
     return string
 
 
@@ -101,7 +99,6 @@ def process_protein(protein):
             f"{tmpdirname}/prot_tmp_while_hmo_helps_write_to_stream.pdb", "r"
         ) as f:
             string = f.read()
-        tempfile.close()
     return string
 
 
