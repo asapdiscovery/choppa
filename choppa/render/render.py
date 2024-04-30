@@ -22,7 +22,9 @@ from choppa.render.logoplots import (
     WHITE_EMPTY_SQUARE,
     render_singleres_logoplot,
 )
-from choppa.data.templates.resources import HTML_TEMPLATE
+from choppa.data.templates.resources import HTML_TEMPLATE, LOGOPLOT_TEMPLATE
+from jinja2 import Template
+
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 logger = logging.getLogger()
@@ -529,87 +531,34 @@ class InteractiveView:
         return intn_dict
 
     def inject_stuff_in_template(
-        self, sdf_str, pdb_str, surface_coloring, logoplot_dict, template=HTML_TEMPLATE
-    ):
+        self, sdf_str, pdb_str, surface_coloring, logoplot_dict):
         """ "
         Replaces parts of a template HTML with relevant bits of data to get to a HTML view
         of the (ligand-) protein, its fitness and its interactions (if any).
-        TODO: HMO to replace this crude replacement code with `jinja`.
+
+        Uses Jinja2 templating to render based on static HTML template.
         """
         # create a bunch of DIVs of the logoplots.
         logoplot_divs = ""
         for _, logoplot_data in logoplot_dict.items():
-            # we have to write a DIV for each logoplot. keep this repetetive for HMO to understand more easily.
-            # we're just adding more and more to the `logoplot_divs` string with properly placed newlines to make this work.
-            # start with wildtype
-            LOGOPLOT_TYPE_INSERT = "logoplotbox_wt"
-            LOGOPLOT_DIV_ID_INSERT = f"wtDIV_{logoplot_data['fitness_aligned_index']}"
-            LOGOPLOT_DESCRIPTION_INSERT = "wt residue logoplot"
-            LOGOPLOT_BASE64_INSERT = (
-                str(logoplot_data["logoplots_base64"]["wildtype"])
-                .replace("b'", "")
-                .replace("'", "")
-            )  # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair
-            logoplot_divs += (
-                f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'
-                + f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'
-                + "</div>\n"
-            )  # NB: had to switch around quotation types bc JS is awful (the language, not the person)
-            # then do fit
-            LOGOPLOT_TYPE_INSERT = "logoplotbox_fit"
-            LOGOPLOT_DIV_ID_INSERT = f"fitDIV_{logoplot_data['fitness_aligned_index']}"
-            LOGOPLOT_DESCRIPTION_INSERT = "fit residue logoplot"
-            LOGOPLOT_BASE64_INSERT = (
-                str(logoplot_data["logoplots_base64"]["fit"])
-                .replace("b'", "")
-                .replace("'", "")
-            )  # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair
-            logoplot_divs += (
-                f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'
-                + f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'
-                + "</div>\n"
-            )  # NB: had to switch around quotation types bc JS is awful (the language, not the person)
-            # then do unfit
-            LOGOPLOT_TYPE_INSERT = "logoplotbox_unfit"
-            LOGOPLOT_DIV_ID_INSERT = (
-                f"unfitDIV_{logoplot_data['fitness_aligned_index']}"
-            )
-            LOGOPLOT_DESCRIPTION_INSERT = "unfit residue logoplot"
-            LOGOPLOT_BASE64_INSERT = (
-                str(logoplot_data["logoplots_base64"]["unfit"])
-                .replace("b'", "")
-                .replace("'", "")
-            )  # cleanup some BytesIO artefacts; found using https://base64.guru/tools/repair
-            logoplot_divs += (
-                f'<div class="{LOGOPLOT_TYPE_INSERT}" id="{LOGOPLOT_DIV_ID_INSERT}" style="display:none">\n'
-                + f'  <img alt="{LOGOPLOT_DESCRIPTION_INSERT}" src="data:image/png;base64,{LOGOPLOT_BASE64_INSERT}" />\n'
-                + "</div>\n"
-            )  # NB: had to switch around quotation types bc JS is awful (the language, not the person)
+            wt = logoplot_data["logoplots_base64"]["wildtype"]
+            fit = logoplot_data["logoplots_base64"]["fit"]
+            unfit = logoplot_data["logoplots_base64"]["unfit"]
+            data = {"ID": logoplot_data["fitness_aligned_index"], "WT_BASE64_INSERT": wt.decode("ascii"), "FIT_BASE64_INSERT": fit.decode("ascii"), "UNFIT_BASE64_INSERT": unfit.decode("ascii")}
+            logoplot_template_str = open(LOGOPLOT_TEMPLATE).read()
+            logoplot_template = Template(logoplot_template_str)
+            logoplot_divs += logoplot_template.render(data)
 
         # add the PDB (protein) and SDF (ligand)
-        with open(template, "rt") as fin:
-            with open(self.output_session_file, "wt") as fout:
-                for line in fin:
-                    line = line.replace("{{PDB_INSERT}}", f"{pdb_str}")
-                    line = line.replace("{{SDF_INSERT}}", f"{sdf_str}")
+        intr_dct = str(self.get_interaction_dict()) if self.ligand_present else "{}"
 
-                    # logoplots are a bit more complicated, need to add all those DIVs
-                    line = line.replace("{{LOGOPLOTS_INSERTS}}", logoplot_divs)
+        data = {"PDB_INSERT": pdb_str, "SDF_INSERT": sdf_str, "LOGOPLOTS_INSERTS": logoplot_divs, "SURFACE_COLOR_INSERT": surface_coloring, "INTN_DICT_INSERT": intr_dct}
+        # render the template with Jinja
+        template_str = open(HTML_TEMPLATE).read()
+        template = Template(template_str)
+        with open(self.output_session_file, "wt") as fout:
+            fout.write(template.render(data))
 
-                    # add in surface coloring
-                    line = line.replace("{{SURFACE_COLOR_INSERT}}", surface_coloring)
-
-                    # finally add interactions if there is a ligand present
-                    if "{{INTN_DICT_INSERT}}" in line:
-                        if self.ligand_present:
-                            line = line.replace(
-                                "{{INTN_DICT_INSERT}}", str(self.get_interaction_dict())
-                            )
-                        else:
-                            line = line.replace(
-                                "{{INTN_DICT_INSERT}}", "{}"
-                            )  # ensures JS doesn't break.
-                    fout.write(line)
 
     def render(self):
         # check if we have confidences, if we do then record the [min, max]

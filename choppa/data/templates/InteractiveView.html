@@ -137,7 +137,7 @@
     </div>
     <!-- show logoplots per residue on hover -->
     <!-- bake in the base64 divs of all the residues. -->
-    {{LOGOPLOTS_INSERTS}}
+    {{ LOGOPLOTS_INSERTS }}
   </head>
   <script>
     function showLogoPlots(resi) {
@@ -158,8 +158,8 @@
         y.style.display = "none";
       }
     var viewer=$3Dmol.createViewer($("#gldiv"));
-                     var prot_pdb = `{{PDB_INSERT}}`;
-                     var lig_sdf =`{{SDF_INSERT}}`;       
+                     var prot_pdb = `{{ PDB_INSERT }}`;
+                     var lig_sdf =`{{ SDF_INSERT }}`;       
                          //////////////// set up system
                          viewer.addModel(prot_pdb, "pdb") 
                          // set protein sticks and surface
@@ -167,7 +167,7 @@
                          // define a coloring function based on our residue ranges. We can't call .addSurface separate times because the surfaces won't be merged nicely. 
                          var colorAsSnake = function(atom) {
                           atom_residx = String(atom.resi)
-                                {{SURFACE_COLOR_INSERT}}
+                                {{ SURFACE_COLOR_INSERT }}
                                           }};                         viewer.addSurface("MS", {colorfunc: colorAsSnake, opacity: 0.9}) 
                      
                          viewer.setStyle({bonds: 0}, {sphere:{radius:0.5}}); //water molecules
@@ -200,7 +200,7 @@ if (atom.chain){
                          viewer.setHoverDuration(100); // makes resn popup instant on hover
                      
                          //////////////// add protein-ligand interactions
-                         var intn_dict = {{INTN_DICT_INSERT}}
+                         var intn_dict = {{ INTN_DICT_INSERT }}
                          for (const [_, intn] of Object.entries(intn_dict)) {
                              viewer.addCylinder({start:{x:parseFloat(intn["lig_at_x"]),y:parseFloat(intn["lig_at_y"]),z:parseFloat(intn["lig_at_z"])},
                                                      end:{x:parseFloat(intn["prot_at_x"]),y:parseFloat(intn["prot_at_y"]),z:parseFloat(intn["prot_at_z"])},
