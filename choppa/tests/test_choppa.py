@@ -30,11 +30,92 @@ from choppa.align.align import AlignFactory
 from choppa.render import render
 
 
-def test_choppa_render():
-    """Sample test, will always pass so long as import statement worked."""
+def test_choppa_render_toy_mac1_sectioned():
+    """Tests that `choppa` is able to render views on a fitness dataset that
+    has poor (fractioned) overlap with a toy PDB file."""
 
     fitness_dict = FitnessFactory(
         TOY_FITNESS_DATA_SECTIONED, confidence_colname="confidence"
+    ).get_fitness_basedict()
+    complex = ComplexFactory(TOY_COMPLEX).load_pdb()
+    complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
+
+    filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+
+    render.PublicationView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+    render.InteractiveView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+
+def test_choppa_correct_custom_columns():
+    """Tests that `choppa` is able to read in correct columns in input fitness data."""
+
+    FitnessFactory(TOY_FITNESS_DATA_SECTIONED).get_fitness_basedict()
+
+
+def test_choppa_incorrect_custom_columns():
+    """Tests that `choppa` throws an error for incorrectly specified columns in input fitness data."""
+    with pytest.raises(KeyError) as excinfo:
+        FitnessFactory(
+            TOY_FITNESS_DATA_SECTIONED,
+            wildtype_colname="foo",
+            mutant_colname="foo",
+            fitness_colname="foo",
+            resindex_colname="foo",
+        ).get_fitness_basedict()
+    assert "Column(s) ['foo', 'foo', 'foo', 'foo'] not found in" in str(excinfo.value)
+
+
+def test_choppa_render_toy_mac1_sectioned_noconf():
+    """Tests that `choppa` is able to render views on a fitness dataset that
+    has poor (fractioned) overlap with a toy PDB file, while not adding confidence."""
+
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED).get_fitness_basedict()
+    complex = ComplexFactory(TOY_COMPLEX).load_pdb()
+    complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
+
+    filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+
+    render.PublicationView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+    render.InteractiveView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+
+def test_choppa_render_toy_mac1_full():
+    """Tests that `choppa` is able to render views on a fitness dataset that
+    has complete overlap with a toy PDB file."""
+
+    fitness_dict = FitnessFactory(
+        TOY_FITNESS_DATA_COMPLETE, confidence_colname="confidence"
+    ).get_fitness_basedict()
+    complex = ComplexFactory(TOY_COMPLEX).load_pdb()
+    complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
+
+    filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+
+    render.PublicationView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+    render.InteractiveView(
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+    ).render()
+
+
+def test_choppa_render_toy_mac1_truncated():
+    """Tests that `choppa` is able to render views on a fitness dataset that
+    has decenr (trunacted at either end) overlap with a toy PDB file."""
+
+    fitness_dict = FitnessFactory(
+        TOY_FITNESS_DATA_TRUNCATED, confidence_colname="confidence"
     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()

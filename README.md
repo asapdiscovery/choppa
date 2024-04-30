@@ -1,15 +1,15 @@
 choppa
 ==============================
 [//]: # (Badges)
-[![GitHub Actions Build Status](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/choppa/workflows/CI/badge.svg)](https://github.com/REPLACE_WITH_OWNER_ACCOUNT/choppa/actions?query=workflow%3ACI)
-[![codecov](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/choppa/branch/main/graph/badge.svg)](https://codecov.io/gh/REPLACE_WITH_OWNER_ACCOUNT/choppa/branch/main)
+[![GitHub Actions Build Status](https://github.com/JenkeScheen/choppa/workflows/CI/badge.svg)](https://github.com/JenkeScheen/choppa/actions?query=workflow%3ACI)
+[![codecov](https://codecov.io/gh/JenkeScheen/choppa/branch/main/graph/badge.svg)](https://codecov.io/gh/JenkeScheen/choppa/branch/main)
 
 
 Integrated mutational and structural biology data into a concerted HTML view.
 
 ### Copyright
 
-Copyright (c) 2024, Jenke Scheen
+Copyright (c) 2024, Jenke Scheen & Hugo MacDermott-Opeskin
 
 
 #### Acknowledgements
