@@ -3,8 +3,13 @@ import pymol2
 from rdkit import Chem
 import math
 from tqdm import tqdm
+import matplotlib
+
 from time import sleep
 
+import matplotlib.font_manager
+
+matplotlib.font_manager._load_fontmanager(try_read_cache=False)
 from choppa.render.utils import (
     show_contacts,
     get_ligand_resnames_from_pdb_str,
