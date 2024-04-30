@@ -3,7 +3,13 @@ import pymol2
 from rdkit import Chem
 import math
 from tqdm import tqdm
+import matplotlib
 
+from time import sleep
+
+import matplotlib.font_manager
+
+matplotlib.font_manager._load_fontmanager(try_read_cache=False)
 from choppa.render.utils import (
     show_contacts,
     get_ligand_resnames_from_pdb_str,
@@ -329,7 +335,7 @@ class InteractiveView:
         else:
             return [min(confidence_values), max(confidence_values)]
 
-    def get_logoplot_dict(self, confidence_lims, multiprocess=False):
+    def get_logoplot_dict(self, confidence_lims, multiprocess=True, max_workers=None):
         """
         For a fitness dict, load all base64 logoplots into memory using multithreading if requested.
 
@@ -340,48 +346,89 @@ class InteractiveView:
         logoplot_dict = {}
 
         if multiprocess:
-            # TODO
-            raise NotImplementedError(
-                "Multiprocessing for `LogoPlot` generation is not yet supported."
-            )
+            logger.info("Using MultiProcessing")
+            from concurrent.futures import ProcessPoolExecutor
+
+            # use multithreading to generate logoplots
+            with ProcessPoolExecutor(
+                max_workers=max_workers
+            ) as executor:  # Use optimal thread pool size
+                futures = {
+                    executor.submit(
+                        self._make_logoplot_residue,
+                        idx,
+                        residue_fitness_dict,
+                        confidence_lims,
+                    )
+                    for idx, residue_fitness_dict in self.fitness_dict.items()
+                }
+
+            with tqdm(total=len(futures)) as progress_bar:
+                for future in futures:
+                    try:
+                        logoplot, idx = future.result()
+                        logoplot_dict[idx] = logoplot
+                        progress_bar.update(
+                            1
+                        )  # Update progress bar for each completed task
+                    except Exception as e:
+                        # Handle potential exceptions raised during thread execution
+                        logger.error(f"Error generating logoplot: {e}")
+                        progress_bar.update(1)  # Update progress bar even on error
+
         else:
             for idx, residue_fitness_dict in tqdm(self.fitness_dict.items()):
 
-                # catch if res has no fitness, create empty logoplots instead (but show the wildtype)
-                if not "aa" in residue_fitness_dict["wildtype"]:
-                    logoplot_dict[idx] = {
-                        "fitness_aligned_index": idx,
-                        "fitness_csv_index": idx,
-                        "logoplots_base64": {
-                            "wildtype": render_singleres_logoplot(
-                                "".join(residue_fitness_dict["wildtype"])
-                            ),
-                            "fit": WHITE_EMPTY_SQUARE,
-                            "unfit": WHITE_EMPTY_SQUARE,
-                        },
-                    }
-                    continue
-
-                wildtype_base64, fit_base64, unfit_base64 = LogoPlot(
-                    residue_fitness_dict, fitness_threshold=self.fitness_threshold
-                ).build_logoplot(
-                    global_min_confidence=confidence_lims[0],
-                    global_max_confidence=confidence_lims[1],
+                logoplot, idx = self._make_logoplot_residue(
+                    idx, residue_fitness_dict, confidence_lims
                 )
+                logoplot_dict[idx] = logoplot
 
-                logoplot_dict[idx] = {
-                    "fitness_aligned_index": residue_fitness_dict[
-                        "fitness_aligned_index"
-                    ],
-                    "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
-                    "logoplots_base64": {
-                        "wildtype": wildtype_base64,
-                        "fit": fit_base64,
-                        "unfit": unfit_base64,
-                    },
-                }
+        # sort the logoplot dict by residue index so that the multiprocessed logoplots are in same order as
+        # if they were generated sequentially.
+        logoplot_dict = dict(sorted(logoplot_dict.items()))
 
         return logoplot_dict
+
+    def _make_logoplot_residue(self, idx, residue_fitness_dict, confidence_lims):
+        """
+        For a single residue, generate logoplots for wildtype, fit and unfit mutants.
+        """
+        if not "aa" in residue_fitness_dict["wildtype"]:
+            return (
+                {
+                    "fitness_aligned_index": idx,
+                    "fitness_csv_index": idx,
+                    "logoplots_base64": {
+                        "wildtype": render_singleres_logoplot(
+                            "".join(residue_fitness_dict["wildtype"])
+                        ),
+                        "fit": WHITE_EMPTY_SQUARE,
+                        "unfit": WHITE_EMPTY_SQUARE,
+                    },
+                },
+                idx,
+            )
+
+        wildtype_base64, fit_base64, unfit_base64 = LogoPlot(
+            residue_fitness_dict, fitness_threshold=self.fitness_threshold
+        ).build_logoplot(
+            global_min_confidence=confidence_lims[0],
+            global_max_confidence=confidence_lims[1],
+        )
+
+        return (
+            {
+                "fitness_aligned_index": residue_fitness_dict["fitness_aligned_index"],
+                "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
+                "logoplots_base64": {
+                    "wildtype": wildtype_base64,
+                    "fit": fit_base64,
+                    "unfit": unfit_base64,
+                },
+            },
+            idx,
+        )
 
     def get_surface_coloring_dict(self):
         """
