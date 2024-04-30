@@ -216,10 +216,10 @@ def get_contacts_mda(
         for contacted_res_at in contacted_res_ats:
             # we only want to show HBD/HBA
             if (
-                contacted_lig_at.type == "N"
-                and contacted_res_at.type == "O"
-                or contacted_lig_at.type == "O"
-                and contacted_res_at.type == "N"
+                contacted_lig_at.element == "N"
+                and contacted_res_at.element == "O"
+                or contacted_lig_at.element == "O"
+                and contacted_res_at.element == "N"
             ):
                 contacts.append([contacted_lig_at, contacted_res_at])
 
