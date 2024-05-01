@@ -4,26 +4,24 @@ from rdkit import Chem
 import math
 from tqdm import tqdm
 import matplotlib
-
-from time import sleep
-
 import matplotlib.font_manager
 
 matplotlib.font_manager._load_fontmanager(try_read_cache=True)
 matplotlib.set_loglevel("critical")
-from choppa.utils import (
+
+from utils import (
     show_contacts,
     get_ligand_resnames_from_pdb_str,
     split_pdb_str,
     get_contacts_mda,
     biopython_to_mda,
 )
-from choppa.logoplots import (
+from logoplots import (
     LogoPlot,
     WHITE_EMPTY_SQUARE,
     render_singleres_logoplot,
 )
-from choppa.data.templates.resources import HTML_TEMPLATE, LOGOPLOT_TEMPLATE
+from data.templates.resources import HTML_TEMPLATE, LOGOPLOT_TEMPLATE
 from jinja2 import Template
 
 
@@ -598,17 +596,17 @@ class InteractiveView:
 
 
 if __name__ == "__main__":
-    from choppa.data.toy_data.resources import (
+    from data.toy_data.resources import (
         TOY_COMPLEX,
         TOY_FITNESS_DATA_COMPLETE,
         TOY_FITNESS_DATA_TRUNCATED,
     )
-    from choppa.data.toy_data.resources import (
+    from data.toy_data.resources import (
         TOY_FITNESS_DATA_SECTIONED,
         TOY_FITNESS_DATA_COMPLETE_NOCONF,
     )
 
-    from choppa.IO.input import FitnessFactory, ComplexFactory
+    from IO.input import FitnessFactory, ComplexFactory
 
     fitness_dict = FitnessFactory(
         TOY_FITNESS_DATA_SECTIONED, confidence_colname="confidence"
@@ -616,7 +614,7 @@ if __name__ == "__main__":
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
 
-    from choppa.align.align import AlignFactory
+    from align import AlignFactory
 
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
