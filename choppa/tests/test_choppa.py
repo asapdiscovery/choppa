@@ -48,11 +48,24 @@ def test_choppa_render_toy_mac1_sectioned():
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
     ).render()
 
+    # we know the intended output, test on this.
+    assert len(filled_aligned_fitness_dict) == 164
+    assert 4 not in filled_aligned_fitness_dict
+    assert 5 in filled_aligned_fitness_dict
+
 
 def test_choppa_correct_custom_columns():
     """Tests that `choppa` is able to read in correct columns in input fitness data."""
 
-    FitnessFactory(TOY_FITNESS_DATA_SECTIONED).get_fitness_basedict()
+    fitness_dict = FitnessFactory(TOY_FITNESS_DATA_SECTIONED).get_fitness_basedict()
+    # check that some of the correct keys are in the dict
+    assert "fitness_csv_index" in fitness_dict[5]
+    assert "wildtype" in fitness_dict[5]
+    assert "mutants" in fitness_dict[5]
+
+    # test that one of the residues has the intended number of mutants
+    assert len(fitness_dict[5]["wildtype"]) == 3
+    assert len(fitness_dict[5]["mutants"]) == 20
 
 
 def test_choppa_incorrect_custom_columns():
@@ -85,6 +98,8 @@ def test_choppa_render_toy_mac1_sectioned_noconf():
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
     ).render()
 
+    assert len(filled_aligned_fitness_dict) == 164
+
 
 def test_choppa_render_toy_mac1_full():
     """Tests that `choppa` is able to render views on a fitness dataset that
@@ -106,6 +121,8 @@ def test_choppa_render_toy_mac1_full():
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
     ).render()
 
+    assert len(filled_aligned_fitness_dict) == 164
+
 
 def test_choppa_render_toy_mac1_truncated():
     """Tests that `choppa` is able to render views on a fitness dataset that
@@ -126,3 +143,5 @@ def test_choppa_render_toy_mac1_truncated():
     render.InteractiveView(
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
     ).render()
+
+    assert len(filled_aligned_fitness_dict) == 164
