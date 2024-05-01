@@ -5,7 +5,7 @@ channels:
   - defaults
 
 dependencies:
-    # Base depends
+  # Base depends
   - python
   - pip
 
@@ -25,12 +25,16 @@ dependencies:
   - logomaker
   - jinja2
 
-    # Testing
+  # Testing
   - pytest
   - pytest-cov
   - codecov
 
-    # Pip-only installs
+  # docs
+  - sphinx
+  - sphinx_rtd_theme 
+  
+  # Pip-only installs
   #- pip:
   #  - codecov
 
