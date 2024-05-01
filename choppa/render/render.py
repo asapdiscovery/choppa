@@ -9,7 +9,8 @@ from time import sleep
 
 import matplotlib.font_manager
 
-matplotlib.font_manager._load_fontmanager(try_read_cache=False)
+matplotlib.font_manager._load_fontmanager(try_read_cache=True)
+matplotlib.set_loglevel("critical")
 from choppa.render.utils import (
     show_contacts,
     get_ligand_resnames_from_pdb_str,
@@ -531,7 +532,8 @@ class InteractiveView:
         return intn_dict
 
     def inject_stuff_in_template(
-        self, sdf_str, pdb_str, surface_coloring, logoplot_dict):
+        self, sdf_str, pdb_str, surface_coloring, logoplot_dict
+    ):
         """ "
         Replaces parts of a template HTML with relevant bits of data to get to a HTML view
         of the (ligand-) protein, its fitness and its interactions (if any).
@@ -544,7 +546,12 @@ class InteractiveView:
             wt = logoplot_data["logoplots_base64"]["wildtype"]
             fit = logoplot_data["logoplots_base64"]["fit"]
             unfit = logoplot_data["logoplots_base64"]["unfit"]
-            data = {"ID": logoplot_data["fitness_aligned_index"], "WT_BASE64_INSERT": wt.decode("ascii"), "FIT_BASE64_INSERT": fit.decode("ascii"), "UNFIT_BASE64_INSERT": unfit.decode("ascii")}
+            data = {
+                "ID": logoplot_data["fitness_aligned_index"],
+                "WT_BASE64_INSERT": wt.decode("ascii"),
+                "FIT_BASE64_INSERT": fit.decode("ascii"),
+                "UNFIT_BASE64_INSERT": unfit.decode("ascii"),
+            }
             logoplot_template_str = open(LOGOPLOT_TEMPLATE).read()
             logoplot_template = Template(logoplot_template_str)
             logoplot_divs += logoplot_template.render(data)
@@ -552,13 +559,18 @@ class InteractiveView:
         # add the PDB (protein) and SDF (ligand)
         intr_dct = str(self.get_interaction_dict()) if self.ligand_present else "{}"
 
-        data = {"PDB_INSERT": pdb_str, "SDF_INSERT": sdf_str, "LOGOPLOTS_INSERTS": logoplot_divs, "SURFACE_COLOR_INSERT": surface_coloring, "INTN_DICT_INSERT": intr_dct}
+        data = {
+            "PDB_INSERT": pdb_str,
+            "SDF_INSERT": sdf_str,
+            "LOGOPLOTS_INSERTS": logoplot_divs,
+            "SURFACE_COLOR_INSERT": surface_coloring,
+            "INTN_DICT_INSERT": intr_dct,
+        }
         # render the template with Jinja
         template_str = open(HTML_TEMPLATE).read()
         template = Template(template_str)
         with open(self.output_session_file, "wt") as fout:
             fout.write(template.render(data))
-
 
     def render(self):
         # check if we have confidences, if we do then record the [min, max]

@@ -108,12 +108,31 @@ ENV/
 # In-tree generated files
 */_version.py
 
+# MacOS files
+*.DS_store
 
 # HTML files
 *.html
 
-# PDB files
+# structure files
+*.xyz
+*.mol
 *.pdb
+*.cif
+*.sdf
+*.mol2
+*.oedu
+*.oeb
+*.oez
+*.mmcif
+*.mmtf
+*.fasta
+*.smi
+*.smiles
+# gzip versions of the above
+*.inchi
+*.inchikey
+*.gz
 
 # PSE files
 *.pse

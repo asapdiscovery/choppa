@@ -87,16 +87,17 @@ class AlignFactory:
             elif fitness_res == pdb_res:
                 # the fitness data does contain this residue in the PDB and alignment has matched it -> good
                 alignment_shift_dict[fitness_resid] = pdb_resid
-            elif fitness_res != pdb_res and pdb_res == "-":
-                logger.warn(
-                    f"Fitness residue {fitness_res}{fitness_resid} (index {i} in alignment) not matched to a PDB residue"
-                )
-                pass
             else:
-                # the fitness residue is mismatched to another residue type in the PDB -> bad and not allowed
-                raise ValueError(
-                    f"Alignment has matched a fitness residue to either a gap in the PDB or to a different residue type:\nPDB index: {pdb_resid}\nPDB residue: {pdb_res}\nFitness index: {i}\nFitness residue: {fitness_res}\n.. consider adjusting alignment hyperparameters."
-                )
+                print("unmatched!")
+            # elif fitness_res != pdb_res and pdb_res == "-":
+            #     logger.warn(  # unmatched -> bad
+            #         f"Fitness residue {fitness_res}{fitness_resid} (index {i} in alignment) not matched to a PDB residue"
+            #     )
+            # else:
+            #     # the fitness residue is mismatched to another residue type in the PDB -> bad
+            #     logger.warn(  # this could also be an exception
+            #         f"Alignment has matched a fitness residue to either a gap in the PDB or to a different residue type:\nPDB index: {pdb_resid}\nPDB residue: {pdb_res}\nFitness index: {i}\nFitness residue: {fitness_res}\n.. consider adjusting alignment hyperparameters. Ignoring this match."
+            #     )
 
         return alignment_shift_dict
 
