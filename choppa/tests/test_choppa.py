@@ -24,7 +24,7 @@ from choppa.data.toy_data.resources import (
 )
 
 from choppa.IO.input import FitnessFactory, ComplexFactory
-from choppa.align.align import AlignFactory
+from choppa.align import AlignFactory
 from choppa.render import render
 
 

@@ -11,14 +11,14 @@ import matplotlib.font_manager
 
 matplotlib.font_manager._load_fontmanager(try_read_cache=True)
 matplotlib.set_loglevel("critical")
-from choppa.render.utils import (
+from choppa.utils import (
     show_contacts,
     get_ligand_resnames_from_pdb_str,
     split_pdb_str,
     get_contacts_mda,
     biopython_to_mda,
 )
-from choppa.render.logoplots import (
+from choppa.logoplots import (
     LogoPlot,
     WHITE_EMPTY_SQUARE,
     render_singleres_logoplot,
