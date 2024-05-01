@@ -1,7 +1,0 @@
-{
-    "python.testing.pytestArgs": [
-        "choppa"
-    ],
-    "python.testing.unittestEnabled": false,
-    "python.testing.pytestEnabled": true
-}
