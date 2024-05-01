@@ -13,8 +13,8 @@ sphinx:
 conda:
   environment: devtools/conda-envs/choppa.yaml
 
-# python:
-#   # Install our python package before building the docs
-#   install:
-#     - method: pip
-#       path: choppa
+python:
+  # Install our python package before building the docs
+  install:
+    - method: pip
+      path: choppa
