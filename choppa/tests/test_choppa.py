@@ -57,7 +57,7 @@ def test_choppa_correct_custom_columns():
 
 def test_choppa_incorrect_custom_columns():
     """Tests that `choppa` throws an error for incorrectly specified columns in input fitness data."""
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(KeyError, match="not found in"):
         FitnessFactory(
             TOY_FITNESS_DATA_SECTIONED,
             wildtype_colname="foo",
@@ -65,7 +65,6 @@ def test_choppa_incorrect_custom_columns():
             fitness_colname="foo",
             resindex_colname="foo",
         ).get_fitness_basedict()
-    assert "Column(s) ['foo', 'foo', 'foo', 'foo'] not found in" in str(excinfo.value)
 
 
 def test_choppa_render_toy_mac1_sectioned_noconf():

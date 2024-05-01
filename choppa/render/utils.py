@@ -1,4 +1,4 @@
-import MDAnalysis
+import MDAnalysis as mda
 from MDAnalysis.lib.util import NamedStream
 from MDAnalysis.analysis import distances
 from MDAnalysis.core.groups import AtomGroup
@@ -20,7 +20,7 @@ def get_ligand_resnames_from_pdb_str(PDB_str, remove_solvent=True):
         warnings.simplefilter(
             "ignore"
         )  # hides MDA RunTimeWarning that complains about string IO
-        u = MDAnalysis.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
+        u = mda.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
 
     if remove_solvent:
         ag = u.select_atoms("not protein and not (name H* or type OW)")
@@ -34,12 +34,11 @@ def biopython_to_mda(BP_complex):
     """
     Converts a biopython protein object to an MDAnalysis one.
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        io = PDBIO()
-        io.set_structure(BP_complex)
-        io.save(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
-
-        u = MDAnalysis.Universe(f"{tmpdirname}/tmp_while_hmo_helps_write_to_stream.pdb")
+    io = PDBIO()
+    io.set_structure(BP_complex)
+    f = StringIO()
+    io.save(f)
+    u = mda.Universe(NamedStream(f, "complex.pdb"))
     return u
 
 
@@ -53,7 +52,7 @@ def get_pdb_components(PDB_str, remove_solvent=True):
         warnings.simplefilter(
             "ignore"
         )  # hides MDA RunTimeWarning that complains about string IO
-        u = MDAnalysis.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
+        u = mda.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
 
     if remove_solvent:
         ag = u.select_atoms("not (name H* or type OW)")
@@ -71,35 +70,45 @@ def process_ligand(ligand):
     2. write ligand to stream as SDF
     3. Read the stream into an RDKit molecule
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        ligand.write(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.pdb")
+    buf = StringIO()
+    with mda.Writer(mda.lib.util.NamedStream(buf, "lig.pdb"), ligand.n_atoms) as w:
+        w.write(ligand)
 
-        p = pymol2.PyMOL()
-        p.start()
-        p.cmd.load(f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.pdb")
-        p.cmd.save(
-            f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.sdf", "all", 0
-        )  # writes all states, so should be able to handle multi-ligand
-        p.stop()
+    p = pymol2.PyMOL() #NOTE could  do this in RDKit instead
+    p.start()
+    p.cmd.read_pdbstr(buf.getvalue(), "lig")
+    string = p.cmd.get_pdbstr(
+        "all", 0
+    )  # writes all states, so should be able to handle multi-ligand
+    p.stop()
+    return sdf_str_from_pdb(string)
 
-        with open(
-            f"{tmpdirname}/lig_tmp_while_hmo_helps_write_to_stream.sdf", "r"
-        ) as f:
-            string = f.read()
-    return string
 
+
+def sdf_str_from_pdb(pdb_str):
+    """
+    Convert a PDB string to an SDF string using RDKit.
+    """
+    from rdkit import Chem
+
+    mol = Chem.MolFromPDBBlock(pdb_str, sanitize=False, removeHs=False)
+    if mol is None:
+        raise ValueError("Could not convert PDB to RDKit molecule")
+    # Write SDF
+    buf = StringIO()
+    w = Chem.SDWriter(buf)
+    w.write(mol)
+    w.flush()
+    return buf.getvalue()
 
 def process_protein(protein):
     """
     Returns the string for the protein in an MDA universe object.
     """
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        protein.write(f"{tmpdirname}/prot_tmp_while_hmo_helps_write_to_stream.pdb")
-        with open(
-            f"{tmpdirname}/prot_tmp_while_hmo_helps_write_to_stream.pdb", "r"
-        ) as f:
-            string = f.read()
-    return string
+    buf = StringIO()
+    with mda.Writer(mda.lib.util.NamedStream(buf, "protein.pdb"), protein.n_atoms) as w:
+        w.write(protein)
+    return buf.getvalue()
 
 
 def split_pdb_str(PDB_str):
@@ -108,7 +117,6 @@ def split_pdb_str(PDB_str):
     bond orders).
 
     Inspired by https://gist.github.com/PatWalters/c046fee2760e6894ed13e19b8c99193b
-    TODO: set below functions through NamedStream instead of tmpdir
     """
     ligand_pdb, protein_pdb = get_pdb_components(PDB_str)
     if ligand_pdb:
