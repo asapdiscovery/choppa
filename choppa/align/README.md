@@ -1,1 +1,0 @@
-Code to align sequences, specifically to align fitness data with a crystal structure reference.

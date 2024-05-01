@@ -3,8 +3,8 @@ import shutil
 from typing import Optional
 
 from choppa.IO.input import FitnessFactory, ComplexFactory
-from choppa.align.align import AlignFactory
-from choppa.render.render import PublicationView, InteractiveView
+from choppa.align import AlignFactory
+from choppa.render import PublicationView, InteractiveView
 from choppa.cli.utils import SpecialHelpOrder
 
 

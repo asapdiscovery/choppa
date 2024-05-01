@@ -202,17 +202,17 @@ class AlignFactory:
 
 
 if __name__ == "__main__":
-    from choppa.data.toy_data.resources import (
+    from data.toy_data.resources import (
         TOY_COMPLEX,
         TOY_FITNESS_DATA_COMPLETE,
         TOY_FITNESS_DATA_TRUNCATED,
     )
-    from choppa.data.toy_data.resources import (
+    from data.toy_data.resources import (
         TOY_FITNESS_DATA_SECTIONED,
         TOY_FITNESS_DATA_COMPLETE_NOCONF,
     )
 
-    from choppa.IO.input import FitnessFactory, ComplexFactory
+    from IO.input import FitnessFactory, ComplexFactory
 
     fitness_dict = FitnessFactory(
         TOY_FITNESS_DATA_SECTIONED,

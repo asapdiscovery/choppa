@@ -24,8 +24,8 @@ from choppa.data.toy_data.resources import (
 )
 
 from choppa.IO.input import FitnessFactory, ComplexFactory
-from choppa.align.align import AlignFactory
-from choppa.render import render
+from choppa.align import AlignFactory
+from choppa import render
 
 
 def test_choppa_render_toy_mac1_sectioned():

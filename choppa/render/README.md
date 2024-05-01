@@ -1,1 +1,0 @@
-Code to render a fitness view in HTML.
