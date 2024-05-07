@@ -23,7 +23,9 @@ def get_ligand_resnames_from_pdb_str(PDB_str, remove_solvent=True):
         u = mda.Universe(NamedStream(StringIO(PDB_str), "complex.pdb"))
 
     if remove_solvent:
-        ag = u.select_atoms("not protein and not (name H* or type OW)")
+        ag = u.select_atoms(
+            "not protein and not (name HOH or type OW or name WAT or type H2O)"
+        )
     else:
         ag = u.select_atoms("not protein")
     resnames = set(ag.resnames)
@@ -74,7 +76,7 @@ def process_ligand(ligand):
     with mda.Writer(mda.lib.util.NamedStream(buf, "lig.pdb"), ligand.n_atoms) as w:
         w.write(ligand)
 
-    p = pymol2.PyMOL() #NOTE could  do this in RDKit instead
+    p = pymol2.PyMOL()  # NOTE could  do this in RDKit instead
     p.start()
     p.cmd.read_pdbstr(buf.getvalue(), "lig")
     string = p.cmd.get_pdbstr(
@@ -82,7 +84,6 @@ def process_ligand(ligand):
     )  # writes all states, so should be able to handle multi-ligand
     p.stop()
     return sdf_str_from_pdb(string)
-
 
 
 def sdf_str_from_pdb(pdb_str):
@@ -100,6 +101,7 @@ def sdf_str_from_pdb(pdb_str):
     w.write(mol)
     w.flush()
     return buf.getvalue()
+
 
 def process_protein(protein):
     """
