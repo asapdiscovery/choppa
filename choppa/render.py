@@ -608,7 +608,7 @@ if __name__ == "__main__":
     from IO.input import FitnessFactory, ComplexFactory
 
     fitness_dict = FitnessFactory(
-        TOY_FITNESS_DATA_TRUNCATED, confidence_colname="confidence"
+        TOY_FITNESS_DATA_SECTIONED, confidence_colname="confidence"
     ).get_fitness_basedict()
     complex = ComplexFactory(TOY_COMPLEX).load_pdb()
     complex_rdkit = ComplexFactory(TOY_COMPLEX).load_pdb_rdkit()
