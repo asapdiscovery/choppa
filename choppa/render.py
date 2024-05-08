@@ -377,7 +377,6 @@ class InteractiveView:
 
         else:
             for idx, residue_fitness_dict in tqdm(self.fitness_dict.items()):
-
                 logoplot, idx = self._make_logoplot_residue(
                     idx, residue_fitness_dict, confidence_lims
                 )

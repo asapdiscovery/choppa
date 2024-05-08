@@ -40,10 +40,8 @@ class AlignFactory:
         """
         From a fitness `OrderedDict`, extracts the amino acid sequence indices as a list
         """
-        seq_idcs = [
-            fitness_values["fitness_csv_index"]
-            for _, fitness_values in self.fitness_input.items()
-        ]
+        # could just do this with range but keep in this form if we ever need to revert to csv indices
+        seq_idcs = [i for i, (_, _) in enumerate(self.fitness_input.items(), start=1)]
 
         return seq_idcs
 
@@ -71,14 +69,11 @@ class AlignFactory:
         """
 
         alignment_shift_dict = {}
-        for i, (fitness_res, fitness_resid, pdb_res, pdb_resid) in enumerate(
-            zip(
-                alignment[0],
-                self.fitness_get_seqidcs(),
-                alignment[1],
-                self.complex_get_seqidcs(),
-            ),
-            start=1,
+        for fitness_res, fitness_resid, pdb_res, pdb_resid in zip(
+            alignment[0],
+            self.fitness_get_seqidcs(),
+            alignment[1],
+            self.complex_get_seqidcs(),
         ):
             # do some checks before adding to the alignment dict. we do these checks at multiple layers to be 100% sure we're not mismatching the two sequences.
             if fitness_res == "-" and fitness_res != pdb_res:
@@ -88,16 +83,9 @@ class AlignFactory:
                 # the fitness data does contain this residue in the PDB and alignment has matched it -> good
                 alignment_shift_dict[fitness_resid] = pdb_resid
             else:
-                print("unmatched!")
-            # elif fitness_res != pdb_res and pdb_res == "-":
-            #     logger.warn(  # unmatched -> bad
-            #         f"Fitness residue {fitness_res}{fitness_resid} (index {i} in alignment) not matched to a PDB residue"
-            #     )
-            # else:
-            #     # the fitness residue is mismatched to another residue type in the PDB -> bad
-            #     logger.warn(  # this could also be an exception
-            #         f"Alignment has matched a fitness residue to either a gap in the PDB or to a different residue type:\nPDB index: {pdb_resid}\nPDB residue: {pdb_res}\nFitness index: {i}\nFitness residue: {fitness_res}\n.. consider adjusting alignment hyperparameters. Ignoring this match."
-            #     )
+                raise ValueError(
+                    f"Unable to match fitness residue {fitness_res} ({fitness_resid}) to PDB residue {pdb_res} ({pdb_resid})"
+                )
 
         return alignment_shift_dict
 

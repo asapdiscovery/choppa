@@ -40,6 +40,15 @@ def test_choppa_render_toy_mac1_sectioned():
 
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
+    # also test that we're actually reproducing the PDB sequence in the alignment.
+    # prevents us from accidentally writing out the wrong logoplots.
+    alignment = [
+        resdict["wildtype"] for _, resdict in filled_aligned_fitness_dict.items()
+    ]
+
+    assert "".join([val.pop() for val in alignment[:4]]) == "SFSG"
+    assert "".join([val["aa"] for val in alignment[6:25]]) == "KLTDNVYIKNADIVEEAKK"
+
     render.PublicationView(
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
     ).render()

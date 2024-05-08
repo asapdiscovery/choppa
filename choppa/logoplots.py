@@ -44,7 +44,6 @@ def render_singleres_logoplot(res):
     is square and is typically rendered top center downstream.
     """
     _, ax = plt.subplots(figsize=(4, 4))
-
     # create Logo object
     logomaker.Logo(
         pd.DataFrame({res: 1}, index=[0]),
@@ -227,7 +226,6 @@ class LogoPlot:
     def build_logoplot(self, global_min_confidence=False, global_max_confidence=False):
         # determine the wildtype, unfit and fit mutants for this input
         wildtype, unfit_mutants, fit_mutants = self.divide_fitness_types()
-
         # generate the logoplot base64 for wildtype (LHS, top), fit (LHS, bottom) and unfit (RHS; with colorbar)
         wildtype_base64 = self.render_logoplot(
             wildtype,
@@ -282,8 +280,3 @@ if __name__ == "__main__":
     LogoPlot(residue_dict, fitness_threshold=0.7).build_logoplot(
         global_min_confidence=10, global_max_confidence=5000
     )
-
-    # test a fitness dict without conf values
-    # nan=np.nan
-    # residue_dict = {'fitness_aligned_index': 165, 'fitness_csv_index': 161, 'wildtype': {'aa': 'V', 'fitness': 1.0, 'confidence': nan}, 'mutants': [{'aa': 'I', 'fitness': 0.09, 'confidence': nan}, {'aa': 'L', 'fitness': -2.13, 'confidence': nan}, {'aa': 'E', 'fitness': -2.3, 'confidence': nan}, {'aa': 'Q', 'fitness': -1.96, 'confidence': nan}, {'aa': 'D', 'fitness': -3.96, 'confidence': nan}, {'aa': 'N', 'fitness': -2.51, 'confidence': nan}, {'aa': 'H', 'fitness': -3.09, 'confidence': nan}, {'aa': 'W', 'fitness': -3.94, 'confidence': nan}, {'aa': 'F', 'fitness': -2.76, 'confidence': nan}, {'aa': 'Y', 'fitness': -1.46, 'confidence': nan}, {'aa': 'R', 'fitness': -4.67, 'confidence': nan}, {'aa': 'K', 'fitness': -3.52, 'confidence': nan}, {'aa': 'S', 'fitness': -0.39, 'confidence': nan}, {'aa': 'T', 'fitness': -4.71, 'confidence': nan}, {'aa': 'M', 'fitness': -4.5, 'confidence': nan}, {'aa': 'A', 'fitness': -0.8, 'confidence': nan}, {'aa': 'G', 'fitness': -3.9, 'confidence': nan}, {'aa': 'P', 'fitness': 0.4, 'confidence': nan}, {'aa': 'C', 'fitness': -4.86, 'confidence': nan}, {'aa': 'X', 'fitness': -1.61, 'confidence': nan}]}
-    # print(LogoPlot(residue_dict, fitness_threshold=0.7).build_logoplot(global_min_confidence=10, global_max_confidence=5000))
