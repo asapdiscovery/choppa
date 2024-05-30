@@ -136,3 +136,8 @@ ENV/
 
 # PSE files
 *.pse
+
+
+# docs 
+docs/_build/
+docs/API/_autosummary/
