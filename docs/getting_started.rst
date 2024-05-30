@@ -210,7 +210,7 @@ The same coloring is used for the ``HTML view``. Although the ``HTML`` view is n
 
 .. raw:: html
 
-   <iframe src="../../mac1_toy_logoplots.html" width="300"> </iframe>
+   <iframe src="mac1_toy_logoplots.html" width="300"> </iframe>
 
 Caveats to ``choppa``
 -------
