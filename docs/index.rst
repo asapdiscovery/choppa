@@ -6,12 +6,16 @@
 Welcome to choppa's documentation!
 =========================================================
 
+Testing Testing 123
+
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
+   :hidden:
 
    getting_started
-   api
+   API/index
 
 
 

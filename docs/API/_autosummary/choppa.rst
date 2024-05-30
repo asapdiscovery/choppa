@@ -1,0 +1,23 @@
+﻿choppa
+======
+
+.. automodule:: choppa
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+   
+   
+   
+
+
+
