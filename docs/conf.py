@@ -53,6 +53,10 @@ extensions = [
     "sphinx.ext.napoleon",
     "sphinx.ext.intersphinx",
     "sphinx.ext.extlinks",
+    "sphinx_rtd_theme",
+    "myst_parser",
+    "nbsphinx",
+    "nbsphinx_link",
 ]
 
 autosummary_generate = True
@@ -77,7 +81,7 @@ master_doc = "index"
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+language = "en"
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
