@@ -11,7 +11,7 @@ sphinx:
    configuration: docs/conf.py
 
 conda:
-  environment: devtools/conda-envs/choppa.yaml
+  environment: docs/requirements.yaml
 
 python:
   # Install our python package before building the docs

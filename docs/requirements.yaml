@@ -1,12 +1,44 @@
-name: docs
+name: choppa
 channels:
+
+  - conda-forge
+  - defaults
+
 dependencies:
-    # Base depends
+  # Base depends
   - python
   - pip
 
+  # Data workflowing
+  - pandas
+  - biopython
+  - click
+  - mdanalysis
 
+  # CLI
+  - click
+  
+  # visualizations
+  - pymol-open-source
+  - pyqt
+  - prolif
+  - logomaker
+  - jinja2
 
-    # Pip-only installs
+  # Testing
+  - pytest
+  - pytest-cov
+  - codecov
+
+  # docs
+  - sphinx
+  - sphinx_rtd_theme
+  - myst-parser
+  - pandoc
+  - nbsphinx
+  - nbsphinx-link
+  
+  # Pip-only installs
   #- pip:
+  #  - codecov
 
