@@ -6,4 +6,11 @@ API
    :template: custom-module-template.rst
    :recursive:
 
-   choppa
+   choppa.align
+   choppa.logoplots
+   choppa.data
+   choppa.IO
+   choppa.render
+   choppa.reporting
+   choppa.scoring
+   choppa.utils
