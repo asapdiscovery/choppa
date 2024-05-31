@@ -65,6 +65,9 @@ napoleon_use_param = False
 napoleon_use_ivar = True
 nbsphinx_execute = "auto"
 
+# copy across more files to _build, see https://stackoverflow.com/questions/43526551/how-do-i-include-a-subdirectory-and-its-content-to-the-sphinx-output-build-direc
+html_extra_path = ["extra"]
+
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ["_templates"]
 
