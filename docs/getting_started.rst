@@ -226,11 +226,13 @@ in the ``PyMOL`` terminal. The generated image will look something like this:
   :width: 600
   :alt: A publication-style PyMOL view of SARS-CoV-2 Mac1
 
-The same coloring is used for the ``HTML view``. Although the ``HTML`` view is not as high resolution as the raytraced ``PyMOL`` session, it is very useful for communicating sites of interest because of its ``logoplot`` pop-ups (see the top-left legend in the interactive view) and the ability of hosting ``HTML`` files directly onto webpages (and even dropping them into public AWS S3 buckets). The view that we generated looks like this:
+The same coloring is used for the ``HTML view``. Although the ``HTML`` view is not as high resolution as the raytraced ``PyMOL`` session, it is very useful for communicating sites of interest because of its ``logoplot`` pop-ups (see the top-left legend in the interactive view) and the ability of hosting ``HTML`` files directly onto webpages (and even dropping them into public AWS S3 buckets). The view that we generated looks like `this.
+<https://a7e363c69a86a9f51702101656b2932994f870c5ddfeed52d1214bcaaacc.s3.amazonaws.com/sdiufhgs9udvwodknwfidbvwb/sdhvcowyoebrecowberfwwvwbev-ZIKV-NS2B3.html>`_
 
-.. raw:: html
+..  would be nice if we got this to work but for now just linking to S3 page.
+.. .. raw:: html
 
-   <iframe src="mac1_toy_logoplots.html" frameborder="1" width="100%" height="900px"> </iframe>
+..    <iframe src="_static/mac1_toy_logoplots.html" frameborder="1" width="100%" height="900px"> </iframe>
 
 Caveats to ``choppa``
 ---------------
