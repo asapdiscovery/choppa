@@ -2,12 +2,32 @@ Getting Started
 ===============
 
 Rationale & Theory
--------
+---------------
 
-Short summary on why we built this package and what it does (diagram).
+This software package is a spin-out product from the computational chemistry core of `the ASAP Discovery Consortium
+<https://asapdiscovery.org/>`_. Antiviral drug discovery (or any other therapeutic area where mutagenesis of targets is critical to success of drugs) depends heavily on exhaustive exploration of mutational space of therapeutic targets and there is a need to translate these large bodies of data into forms that can be used to instruct decision-making downstream in the drug discovery process.
+``choppa`` was built because in the `ASAP Discovery Consortium` there was a need to marry Deep Mutational Scanning (DMS) data (or phylogenetic analyses) with structural biology data. Although simply plotting whatever average (or min/max) fitness value each residue in the DMS data has produces an attractive figure, these types of visualizations are not helpful to medicinal chemists downstream during decision-making moments as they obfuscate a lot of critical information. Instead, there is a need to know `how many` mutations can realistically occur at a given residue, given the `population of fitness values` associated with its measured mutants. 
+
+To count the number of mutations that will realistically occur for a given residue we will need to define a ``fitness threshold``. This is a value highly dependent on the DMS (or phylogenetics) experiment that acts as the threshold above which a mutation is considered `fit`. This value may be decided by experimentalists or by analyzing whether there is a clear gap between fitness values between wildtype sequences and mutants in catalytic residues, for example:
+
+.. image:: figure_for_choppa_docs.png
+  :width: 600
+  :alt: Distributions of catalytic versus non-catalytic mutations' fitness readouts for a target
+
+Here, we show the density distributions of the population of fitness values for all mutants of three catalytic residues of a target (blue, green and orange on left-hand side). All samples of the experiment where the sequence was fully wildtype (red, right-hand side) shows `much` higher fitness values, with a clear divide in between the two sets of distributions. The center of this fitness value is an ideal candidate for a fitness threshold.
+
+``choppa`` will require the fitness data (with fitness threshold) and crystal structure to map it on as inputs to its CLI. With a single CLI ``render`` command, ``choppa`` will go through its workflow and generate the outputs:
+
+.. image:: choppa_workflow.png
+  :width: 600
+  :alt: General workflow of the choppa CLI pipeline
+
+.. note::
+
+   This project is under active development.
 
 Installation
--------
+---------------
 
 Clone the ``choppa`` github repository:
 
@@ -42,7 +62,7 @@ Check that you can run ``choppa`` by running:
    choppa --help
 
 Tutorial
--------
+---------------
 
 Although ``choppa`` has a complete python API for you to work with, the easiest way to generate fitness views with ``choppa`` is using its command-line interface (CLI). In your terminal, let's pull up the main help information:
 
@@ -213,6 +233,8 @@ The same coloring is used for the ``HTML view``. Although the ``HTML`` view is n
    <iframe src="mac1_toy_logoplots.html" frameborder="1" width="100%" height="900px"> </iframe>
 
 Caveats to ``choppa``
--------
+---------------
 
-Some shortcomings and situations where users may not get the behavior that is advertized.
+``choppa`` is able to deal with a variety of mismatches between fitness and structural biology data. However, there are cases when the alignment may not work correctly.
+
+- If the fitness data is for a single monomer but the protein PDB is a homodimer then the fitness data will only be mapped to one of the two monomeric chains
