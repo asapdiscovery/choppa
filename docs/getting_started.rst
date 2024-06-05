@@ -39,7 +39,7 @@ Install the dependencies into a ``conda`` environment with:
 
 .. code-block:: bash
 
-   conda env create --file=choppa.yaml
+   conda env create --file=devtools/conda-envs/choppa.yaml
 
 (for installing ``conda``, see e.g. `micromamba <https://mamba.readthedocs.io/en/latest/installation/micromamba-installation.html>`_)
 
