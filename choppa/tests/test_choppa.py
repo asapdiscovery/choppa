@@ -28,7 +28,7 @@ from choppa.align import AlignFactory
 from choppa import render
 
 
-def test_choppa_render_toy_mac1_sectioned():
+def test_choppa_render_toy_mac1_sectioned(tmp_path):
     """Tests that `choppa` is able to render views on a fitness dataset that
     has poor (fractioned) overlap with a toy PDB file."""
 
@@ -50,17 +50,21 @@ def test_choppa_render_toy_mac1_sectioned():
     assert "".join([val["aa"] for val in alignment[6:25]]) == "KLTDNVYIKNADIVEEAKK"
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
     ).render()
 
     # we know the intended output, test on this.
     assert len(filled_aligned_fitness_dict) == 164
     assert 4 not in filled_aligned_fitness_dict
     assert 5 in filled_aligned_fitness_dict
+
+    # check files exist
+    assert (tmp_path / "test.pse").exists()
+    assert (tmp_path / "test.html").exists()
 
 
 def test_choppa_correct_custom_columns():
@@ -89,7 +93,7 @@ def test_choppa_incorrect_custom_columns():
         ).get_fitness_basedict()
 
 
-def test_choppa_render_toy_mac1_sectioned_noconf():
+def test_choppa_render_toy_mac1_sectioned_noconf(tmp_path):
     """Tests that `choppa` is able to render views on a fitness dataset that
     has poor (fractioned) overlap with a toy PDB file, while not adding confidence."""
 
@@ -100,17 +104,21 @@ def test_choppa_render_toy_mac1_sectioned_noconf():
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164
 
+    # check files exist
+    assert (tmp_path / "test.pse").exists()
+    assert (tmp_path / "test.html").exists()
 
-def test_choppa_render_toy_mac1_full():
+
+def test_choppa_render_toy_mac1_full(tmp_path):
     """Tests that `choppa` is able to render views on a fitness dataset that
     has complete overlap with a toy PDB file."""
 
@@ -123,17 +131,20 @@ def test_choppa_render_toy_mac1_full():
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164
 
+    # check files exist
+    assert (tmp_path / "test.pse").exists()
+    assert (tmp_path / "test.html").exists()
 
-def test_choppa_render_toy_mac1_truncated():
+def test_choppa_render_toy_mac1_truncated(tmp_path):
     """Tests that `choppa` is able to render views on a fitness dataset that
     has decenr (trunacted at either end) overlap with a toy PDB file."""
 
@@ -146,11 +157,15 @@ def test_choppa_render_toy_mac1_truncated():
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7
+        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164
+
+    # check files exist
+    assert (tmp_path / "test.pse").exists()
+    assert (tmp_path / "test.html").exists()
