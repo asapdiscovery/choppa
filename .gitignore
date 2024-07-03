@@ -141,3 +141,9 @@ ENV/
 # docs 
 docs/_build/
 docs/API/_autosummary/
+
+# pyc files
+*.pyc
+
+# pycache files 
+__pycache__/

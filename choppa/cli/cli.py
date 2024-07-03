@@ -6,7 +6,7 @@ from choppa.IO.input import FitnessFactory, ComplexFactory
 from choppa.align import AlignFactory
 from choppa.render import PublicationView, InteractiveView
 from choppa.cli.utils import SpecialHelpOrder
-
+from pathlib import Path
 
 @click.group(
     cls=SpecialHelpOrder,
@@ -111,9 +111,11 @@ def render(
     confidence_column: Optional[str] = None,
 ):
 
-    if not outfile_publication[-4:] == ".pse":
+    # check extensions
+    if not Path(outfile_publication).suffix == ".pse":
         raise ValueError("--op/--outfile-publication should end in '.pse'.")
-    elif not outfile_interactive[-5:] == ".html":
+   
+    if not Path(outfile_interactive).suffix == ".html":
         raise ValueError("--oi/--outfile-interactive should end in '.html'.")
 
     fitness_dict = FitnessFactory(
