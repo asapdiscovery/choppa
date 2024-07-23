@@ -39,11 +39,8 @@ AMINO_ACIDS = [
 ]
 
 
-def validate_virus_get_url(virus="SARS-CoV-2"):
-    """Checks that the provided virus string is available in NextStrain.
-    Returns the full download URL for downstream GET requests.
-    """
-
+def validate_virus_gene(virus, gene):
+    """Checks that the provided virus and gene strings are available in NextStrain."""
     with open(NEXTSTRAIN_METADATA) as json_data:
         nextstrain_metadata = json.load(json_data)
 
@@ -51,6 +48,20 @@ def validate_virus_get_url(virus="SARS-CoV-2"):
         raise ValueError(
             f"Virus named '{virus}' not in viruses available on NextStrain: {list(nextstrain_metadata.keys())}"
         )
+
+    if not gene in nextstrain_metadata[virus]["genes"]:
+        raise ValueError(
+            f"Gene named '{gene}' not in genes on virus '{virus}' available on NextStrain: {nextstrain_metadata[virus]['genes']}"
+        )
+    return nextstrain_metadata
+
+
+def get_url(virus, gene):
+    """
+    Returns the full download URL for downstream GET requests.
+    """
+    # validate first
+    nextstrain_metadata = validate_virus_gene(virus, gene)
 
     # get the URL from metadata for this virus
     parsed_url = urlparse(nextstrain_metadata[virus]["URL"])
@@ -272,8 +283,36 @@ def parse_mutations(mutation):
 
 #     return pd.DataFrame(entropy)
 
+# code for plotting an interactive sequence-mutation HTML figure like on NextStrain web UI:
+# chart = (
+#     alt.Chart(entropy_df)
+#     .mark_bar()
+#     .encode(
+#         x="codon_position:Q",
+#         y="entropy:Q",
+#         tooltip=["codon_position:Q", "entropy:Q", "gene"],
+#         color=alt.value("skyblue"),
+#     )
+#     .properties(width=1600, height=200, title=f"Entropy of {gene}")
+# )
+# brush = alt.selection_interval(encodings=["x"])  # Brush for selection
+# overview = (
+#     alt.Chart(entropy_df)
+#     .mark_rect()
+#     .encode(x="codon_position:Q", color=alt.value("skyblue"))
+#     .mark_rect()
+#     .add_params(brush)
+#     .properties(width=1600, height=25, title="site zoom bar")
+# )
+# chart = chart.transform_filter(brush)
+# combined_chart = alt.vconcat(chart, overview)
+# combined_chart.save(f"{data_path}_{gene}_entropy.html")
 
-def count_mutations_events(mutations, gene):
+
+def count_mutations_events(metadata_df, gene):
+    mutations = pd.Series(
+        metadata_df.mutations.values, index=metadata_df.name
+    ).to_dict()
     # Count the number of times a mutation occurs on the tree
     mutation_counts = dict()
     for mutation_list in mutations.values():
@@ -302,7 +341,7 @@ def count_mutations_events(mutations, gene):
     return mutation_count_df
 
 
-def finalize_dataframe(mutation_count_df, root_sequence_json):
+def finalize_dataframe(mutation_count_df, root_sequence_json, outfile):
     root_sequence_df = pd.DataFrame(
         [(i + 1, aa) for i, aa in enumerate(root_sequence_json["ORF7a"])],
         columns=["position", "residue"],
@@ -349,31 +388,8 @@ def finalize_dataframe(mutation_count_df, root_sequence_json):
                         "frequency": frequency,
                     }
                 )
-
-    return pd.DataFrame(choppa_nextstrain_data)
-
-
-download_url, nextstrain_tree_url = validate_virus_get_url()
-
-# Fetch the JSON data from the data URL
-tree_json = fetch_nextstrain_json(download_url)
-
-# Fetch the root sequence data
-root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
-
-# Make a tree from the JSON data
-tree = nextstrain_json_to_tree(tree_json)
-
-# Extract the mutations from the tree
-metadata_df = extract_tree_data(
-    tree, attributes=["mutations"], include_internal_nodes=True
-)
-mutations = pd.Series(metadata_df.mutations.values, index=metadata_df.name).to_dict()
-
-# Count terminal mutations
-mutation_count_df = count_mutations_events(mutations, "ORF7a")
-
-# finalize dataframe by adding mutations and root sequence together
-df = finalize_dataframe(mutation_count_df, root_sequence_json)
-
-df.to_csv("~/projects/gekut/nextrain_tmp.csv", index=False)
+    # add all rows into a single dataframe ready for usage with choppa.
+    choppa_nextstrain_df = pd.DataFrame(choppa_nextstrain_data)
+    if outfile:
+        choppa_nextstrain_df.to_csv(outfile)
+    return choppa_nextstrain_df
