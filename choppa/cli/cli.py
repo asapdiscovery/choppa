@@ -8,6 +8,7 @@ from choppa.render import PublicationView, InteractiveView
 from choppa.cli.utils import SpecialHelpOrder
 from pathlib import Path
 
+
 @click.group(
     cls=SpecialHelpOrder,
     context_settings={"max_content_width": shutil.get_terminal_size().columns - 20},
@@ -114,7 +115,7 @@ def render(
     # check extensions
     if not Path(outfile_publication).suffix == ".pse":
         raise ValueError("--op/--outfile-publication should end in '.pse'.")
-   
+
     if not Path(outfile_interactive).suffix == ".html":
         raise ValueError("--oi/--outfile-interactive should end in '.html'.")
 
@@ -147,3 +148,41 @@ def render(
         fitness_threshold=fitness_threshold,
         output_session_file=outfile_interactive,
     ).render()
+
+
+@cli.command(
+    name="nextstrain",
+    help=". ",
+    short_help="From the database of NextStrain-maintained pathogen analyses (https://nextstrain.org), generate a data format suitable for choppa.render().",
+)
+@click.option(
+    "-v",
+    "--virus",
+    type=click.STRING,
+    help="Name of the virus to download mutation data for. See https://nextstrain.org/pathogens for a list of available viruses.",
+    required=True,
+)
+@click.option(
+    "-g",
+    "--gene",
+    type=click.STRING,
+    help="Name of the gene to download mutation data for. See e.g. https://nextstrain.org/zika for a view of available genes.",
+    required=True,
+)
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Name of output file to write mutation data to in CSV. Should end in '.csv'.",
+    required=False,
+    default=None,
+)
+def render(
+    virus: Optional[str] = None,
+    gene: Optional[str] = None,
+    outfile: Optional[str] = None,
+):
+
+    # check extension
+    if not Path(outfile).suffix == ".csv":
+        raise ValueError("-o/--outfile should end in '.csv'.")
