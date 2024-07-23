@@ -341,9 +341,9 @@ def count_mutations_events(metadata_df, gene):
     return mutation_count_df
 
 
-def finalize_dataframe(mutation_count_df, root_sequence_json, outfile):
+def finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile):
     root_sequence_df = pd.DataFrame(
-        [(i + 1, aa) for i, aa in enumerate(root_sequence_json["ORF7a"])],
+        [(i + 1, aa) for i, aa in enumerate(root_sequence_json[gene])],
         columns=["position", "residue"],
     )
 
@@ -352,7 +352,7 @@ def finalize_dataframe(mutation_count_df, root_sequence_json, outfile):
 
     # now construct a choppa-style df. We need to iterate all possible mutations and note the count for each residue
     choppa_nextstrain_data = []
-    for resi in range(1, len(root_sequence_json["ORF7a"])):
+    for resi in range(1, len(root_sequence_json[gene])):
         # get the mutations for this residue number. This dataframe may be empty if there are no mutations in NextStrain.
         recorded_mutations = counts_df[counts_df["position"] == resi]
 
@@ -362,7 +362,7 @@ def finalize_dataframe(mutation_count_df, root_sequence_json, outfile):
                 choppa_nextstrain_data.append(
                     {
                         "residue_index": resi,
-                        "wildtype": root_sequence_json["ORF7a"][resi],
+                        "wildtype": root_sequence_json[gene][resi],
                         "mutant": aa,
                         "frequency": 0,
                     }
@@ -383,7 +383,7 @@ def finalize_dataframe(mutation_count_df, root_sequence_json, outfile):
                 choppa_nextstrain_data.append(
                     {
                         "residue_index": resi,
-                        "wildtype": root_sequence_json["ORF7a"][resi],
+                        "wildtype": root_sequence_json[gene][resi],
                         "mutant": aa,
                         "frequency": frequency,
                     }

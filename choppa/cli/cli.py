@@ -192,7 +192,7 @@ def nextstrain(
     )
 
     # check extension
-    if outfile and not Path(outfile).suffix == ".csv":
+    if not Path(outfile).suffix == ".csv":
         raise ValueError("-o/--outfile should end in '.csv'.")
 
     """
@@ -221,4 +221,4 @@ def nextstrain(
     mutation_count_df = count_mutations_events(metadata_df, gene)
 
     # finalize dataframe by adding mutations and root sequence together
-    df = finalize_dataframe(mutation_count_df, root_sequence_json)
+    df = finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile)
