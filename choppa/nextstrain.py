@@ -14,6 +14,30 @@ from augur.utils import annotate_parents_for_tree
 
 from choppa.data.metadata.resources import NEXTSTRAIN_METADATA
 
+AMINO_ACIDS = [
+    "A",
+    "C",
+    "D",
+    "E",
+    "F",
+    "G",
+    "H",
+    "I",
+    "K",
+    "L",
+    "M",
+    "N",
+    "P",
+    "Q",
+    "R",
+    "S",
+    "T",
+    "V",
+    "W",
+    "Y",
+    "*",
+]
+
 
 def validate_virus_get_url(virus="SARS-CoV-2"):
     """Checks that the provided virus string is available in NextStrain.
@@ -281,8 +305,52 @@ def count_mutations_events(mutations, gene):
 def finalize_dataframe(mutation_count_df, root_sequence_json):
     root_sequence_df = pd.DataFrame(
         [(i + 1, aa) for i, aa in enumerate(root_sequence_json["ORF7a"])],
-        columns=["Position", "Residue"],
+        columns=["position", "residue"],
     )
+
+    # add them together so that we have a df with wildtypes, mutations and each mutation's count
+    counts_df = root_sequence_df.merge(mutation_count_df, on="position")
+
+    # now construct a choppa-style df. We need to iterate all possible mutations and note the count for each residue
+    choppa_nextstrain_data = []
+    for resi in range(1, len(root_sequence_json["ORF7a"])):
+        # get the mutations for this residue number. This dataframe may be empty if there are no mutations in NextStrain.
+        recorded_mutations = counts_df[counts_df["position"] == resi]
+
+        if len(recorded_mutations) == 0:
+            # easy: this residue has no mutants in NextStrain so just set frequencies to 0.
+            for aa in AMINO_ACIDS:
+                choppa_nextstrain_data.append(
+                    {
+                        "residue_index": resi,
+                        "wildtype": root_sequence_json["ORF7a"][resi],
+                        "mutant": aa,
+                        "frequency": 0,
+                    }
+                )
+        else:
+            # we need to include the mutation frequencies found in NextStrain, then for the remaining
+            # mutations we need to set frequencies to 0.
+            for aa in AMINO_ACIDS:
+                if aa not in recorded_mutations["mutation"].values:
+                    frequency = 0  # this possible mutation isn't recorded in NextStrain
+                else:
+                    frequency = recorded_mutations[
+                        recorded_mutations["mutation"] == aa
+                    ]["count"].values[
+                        0
+                    ]  # but this one is
+
+                choppa_nextstrain_data.append(
+                    {
+                        "residue_index": resi,
+                        "wildtype": root_sequence_json["ORF7a"][resi],
+                        "mutant": aa,
+                        "frequency": frequency,
+                    }
+                )
+
+    return pd.DataFrame(choppa_nextstrain_data)
 
 
 download_url, nextstrain_tree_url = validate_virus_get_url()
@@ -306,4 +374,6 @@ mutations = pd.Series(metadata_df.mutations.values, index=metadata_df.name).to_d
 mutation_count_df = count_mutations_events(mutations, "ORF7a")
 
 # finalize dataframe by adding mutations and root sequence together
-print(finalize_dataframe(mutation_count_df, root_sequence_json))
+df = finalize_dataframe(mutation_count_df, root_sequence_json)
+
+df.to_csv("~/projects/gekut/nextrain_tmp.csv", index=False)
