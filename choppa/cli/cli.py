@@ -8,6 +8,7 @@ from choppa.render import PublicationView, InteractiveView
 from choppa.cli.utils import SpecialHelpOrder
 from pathlib import Path
 
+
 @click.group(
     cls=SpecialHelpOrder,
     context_settings={"max_content_width": shutil.get_terminal_size().columns - 20},
@@ -114,7 +115,7 @@ def render(
     # check extensions
     if not Path(outfile_publication).suffix == ".pse":
         raise ValueError("--op/--outfile-publication should end in '.pse'.")
-   
+
     if not Path(outfile_interactive).suffix == ".html":
         raise ValueError("--oi/--outfile-interactive should end in '.html'.")
 
@@ -147,3 +148,77 @@ def render(
         fitness_threshold=fitness_threshold,
         output_session_file=outfile_interactive,
     ).render()
+
+
+@cli.command(
+    name="nextstrain",
+    help=". ",
+    short_help="From the database of NextStrain-maintained pathogen analyses (https://nextstrain.org), generate a data format suitable for choppa.render.",
+)
+@click.option(
+    "-v",
+    "--virus",
+    type=click.STRING,
+    help="Name of the virus to download mutation data for. See https://nextstrain.org/pathogens for a list of available viruses.",
+    required=True,
+)
+@click.option(
+    "-g",
+    "--gene",
+    type=click.STRING,
+    help="Name of the gene to download mutation data for. See e.g. https://nextstrain.org/zika for a view of available genes.",
+    required=True,
+)
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Name of output file to write mutation data to in CSV. Should end in '.csv'.",
+    required=True,
+)
+def nextstrain(
+    virus: Optional[str] = None,
+    gene: Optional[str] = None,
+    outfile: Optional[str] = None,
+):
+    from choppa.nextstrain import (
+        get_url,
+        fetch_nextstrain_json,
+        fetch_nextstrain_root_sequence,
+        nextstrain_json_to_tree,
+        extract_tree_data,
+        count_mutations_events,
+        finalize_dataframe,
+    )
+
+    # check extension
+    if not Path(outfile).suffix == ".csv":
+        raise ValueError("-o/--outfile should end in '.csv'.")
+
+    """
+    TODO
+    check that input works with choppa view generator
+    prod Will to resolve URL issues for e.g. zika
+    populate metadata with URLs and genes - more cleverly?
+    """
+    download_url, nextstrain_tree_url = get_url(virus, gene)
+
+    # Fetch the JSON data from the data URL
+    tree_json = fetch_nextstrain_json(download_url)
+
+    # Fetch the root sequence data
+    root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
+
+    # Make a tree from the JSON data
+    tree = nextstrain_json_to_tree(tree_json)
+
+    # Extract the mutations from the tree
+    metadata_df = extract_tree_data(
+        tree, attributes=["mutations"], include_internal_nodes=True
+    )
+
+    # Count terminal mutations
+    mutation_count_df = count_mutations_events(metadata_df, gene)
+
+    # finalize dataframe by adding mutations and root sequence together
+    df = finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile)
