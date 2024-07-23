@@ -42,4 +42,4 @@ def nextstrain_to_csv(nextstrain_tsv):
 
 
 if __name__ == "__main__":
-    phylo_json_to_df(TOY_PHYLO_DATA, "N").to_csv("sars2_fitness.csv", index=False)
+    phylo_json_to_df(sys.argv[1]).to_csv(sys.argv[2], index=False)
