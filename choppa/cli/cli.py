@@ -184,5 +184,5 @@ def render(
 ):
 
     # check extension
-    if not Path(outfile).suffix == ".csv":
+    if outfile and not Path(outfile).suffix == ".csv":
         raise ValueError("-o/--outfile should end in '.csv'.")
