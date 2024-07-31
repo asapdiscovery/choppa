@@ -412,6 +412,7 @@ class InteractiveView:
         ).build_logoplot(
             global_min_confidence=confidence_lims[0],
             global_max_confidence=confidence_lims[1],
+            index=idx,
         )
 
         return (

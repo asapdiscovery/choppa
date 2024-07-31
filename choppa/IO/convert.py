@@ -17,7 +17,9 @@ def phylo_json_to_df(json_file, gene=None):
 
     `gene` can be specified to only export a specific gene into the dataframe.
     """
-    fitness_df = pd.DataFrame(json.load(open(json_file))["data"])
+    fitness_df = pd.DataFrame(
+        json.load(open(json_file))["ZIKV NS2B-NS3 (Open)"]["mut_metric_df"]
+    )
 
     if gene:
         print(f"Available genes: {set(fitness_df['gene'].values)}")
@@ -37,9 +39,22 @@ def phylo_json_to_df(json_file, gene=None):
         return fitness_df
 
 
-def nextstrain_to_csv(nextstrain_tsv):
-    """ """
+def ns2b3_reset_residcs(df):
+    """ns2b3 has the same indices between the two chains. Super annoying, resetting that here."""
+    new_idcs_col = []
+    for idx in df["reference_site"].values:
+        if "(NS2B) " in idx:
+            new_idcs_col.append(idx.replace("(NS2B) ", ""))
+        elif "(NS3) " in idx:
+            new_idcs_col.append(130 + int(idx.replace("(NS3) ", "")))
+    df["reference_site"] = new_idcs_col
+
+    return df
 
 
 if __name__ == "__main__":
-    phylo_json_to_df(sys.argv[1]).to_csv(sys.argv[2], index=False)
+    fitness_df = phylo_json_to_df(sys.argv[1])
+
+    fitness_df = ns2b3_reset_residcs(fitness_df)
+
+    fitness_df.to_csv(sys.argv[2], index=False)
