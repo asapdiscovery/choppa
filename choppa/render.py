@@ -326,7 +326,6 @@ class InteractiveView:
             if "mutants" in res:  # skips over PDB residues that don't have fitness data
                 mut_conf_values = [mut["confidence"] for mut in res["mutants"]]
                 wildtype_conf_value = res["wildtype"]["confidence"]
-
                 for conf_val in mut_conf_values + [wildtype_conf_value]:
                     confidence_values.append(conf_val)
         if math.isnan(confidence_values[0]):
@@ -413,6 +412,7 @@ class InteractiveView:
         ).build_logoplot(
             global_min_confidence=confidence_lims[0],
             global_max_confidence=confidence_lims[1],
+            index=idx,
         )
 
         return (

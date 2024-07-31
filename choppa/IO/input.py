@@ -112,6 +112,15 @@ class FitnessFactory:
                 self.fitness_colname: "fitness",
             }
         )
+
+        for resi, res_data in fitness_df.groupby(by="residue_index"):
+            if len(res_data) > 25:
+                raise ValueError(
+                    f"Found residue indices in input fitness CSV (at index {resi}) with more mutants than expected ({len(res_data)})! Does your fitness data have "
+                    f"multiple chains in it with overlapping residue indices? Please resolve the input data so that there is no overlap in "
+                    f"residue indices between chains."
+                )
+
         self.fitness_df = fitness_df
         return True
 
@@ -218,13 +227,27 @@ class ComplexFactory:
         """[Placeholder] Returns a system's ligands"""
         return system
 
-    def check_validity(self, complex):
+    def reset_complex_sequence(self, complex):
+        """Adjusts protein sequence indexing to run from 1 to n, rather than whatever wonky indexing
+        the crystallographer may have come up with. BioPython can do this but there are some
+        protections built in against hard re-indexing multi-chain proteins. By first setting
+        the indexing super high (starting at 100,000) and then re-indexing starting from 1 we can
+        circumvent these protections. For more details see https://github.com/biopython/biopython/pull/4623
         """
-        [Placeholder] Does some quick checks to make sure the imported PDB structure is valid. We're
-        not doing any kind of protein prep, just whether biopython _is able to_ read the PDB
-        file and we try to figure out what entry names the solvent/ligands have (if there are any)
-        """
-        return complex
+        # first set indexing to an unphysically high number
+        original_index = []
+        residue_N = 100000
+        for residue in complex.get_residues():
+            original_index.append(residue.id[1])
+            residue.id = (residue.id[0], residue_N, residue.id[2])
+            residue_N += 1
+
+        # now renumber residue in complex starting from 1
+        residue_N = 1
+        for residue in complex.get_residues():
+            residue.id = (residue.id[0], residue_N, residue.id[2])
+            residue_N += 1
+        return complex, original_index
 
     def load_pdb(self):
         """
@@ -232,7 +255,7 @@ class ComplexFactory:
         """
         complex = PDBParser(QUIET=False).get_structure("COMPLEX", self.path_to_pdb_file)
 
-        self.check_validity(complex)
+        self.reset_complex_sequence(complex)
         return complex
 
     def load_pdb_rdkit(self):

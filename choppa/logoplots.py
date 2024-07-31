@@ -133,6 +133,7 @@ class LogoPlot:
         global_max_confidence=False,
         lhs=True,
         wildtype=False,
+        index=False,
     ):
         """
         Creates a logoplot as a base64 string. Also annotes with confidence values if present.
@@ -210,6 +211,8 @@ class LogoPlot:
         plt.yticks([])
         # plt.savefig("debug_logoplot.png", dpi=70, bbox_inches="tight") # uncomment for testing
         # plt object directly to base64 string instead of tmpfile
+        if index:
+            plt.annotate(str(index), xy=(0.8, 0.05), xycoords="axes fraction", size=20)
         lp_bytes = io.BytesIO()
         plt.savefig(
             lp_bytes,
@@ -223,7 +226,9 @@ class LogoPlot:
 
         return lp_base64
 
-    def build_logoplot(self, global_min_confidence=False, global_max_confidence=False):
+    def build_logoplot(
+        self, global_min_confidence=False, global_max_confidence=False, index=False
+    ):
         # determine the wildtype, unfit and fit mutants for this input
         wildtype, unfit_mutants, fit_mutants = self.divide_fitness_types()
         # generate the logoplot base64 for wildtype (LHS, top), fit (LHS, bottom) and unfit (RHS; with colorbar)
@@ -232,6 +237,7 @@ class LogoPlot:
             global_min_confidence=global_min_confidence,
             global_max_confidence=global_max_confidence,
             wildtype=True,
+            index=index,
         )
         fit_base64 = self.render_logoplot(
             fit_mutants,

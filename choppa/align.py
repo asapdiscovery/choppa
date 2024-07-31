@@ -65,29 +65,56 @@ class AlignFactory:
         """
         Given an input complex sequence with residue indices (may not start at 0) and the fitness-complex
         alignment, creates a dictionary with indices that should be used for the fitness data of the form
-        {fitness_idx : aligned_idx}
+        {fitness_idx : aligned_idx}.
+
+        This is complicated for multiple reasons, so we're iterating over each individual index. For example
+        in the following alignment:
+        CSV              50 DMYIERAGDITWEKDAEVTGNSPRLDVALDESGDFSLVEEDGPPMREIILKVVLMAICGM
+                          0 |||||||||||||||||||||||||||||||||||||||---------------------
+        PDB               0 DMYIERAGDITWEKDAEVTGNSPRLDVALDESGDFSLVE---------------------
+
+        CSV             110 NPIAIPFAAGAWYVYVKTGKRSGALWDVPAPKEVKKGETTDGVYRVMTRRLLGSTQVGVG
+                         60 ------------------------------------||||||||||||||||||||||||
+        PDB              39 ------------------------------------GETTDGVYRVMTRRLLGSTQVGVG
+
+        we need to 1) keep track of the starting indices of fitness ('CSV') and crystal structure ('PDB') (50 and 0, resp.)
+        and 2) we need to be able to skip the gap in alignment.
         """
 
         alignment_shift_dict = {}
-        for fitness_res, fitness_resid, pdb_res, pdb_resid in zip(
-            alignment[0],
-            self.fitness_get_seqidcs(),
-            alignment[1],
-            self.complex_get_seqidcs(),
-        ):
-            # do some checks before adding to the alignment dict. we do these checks at multiple layers to be 100% sure we're not mismatching the two sequences.
-            if fitness_res == "-" and fitness_res != pdb_res:
-                # the fitness data does not contain this residue in the PDB and alignment has created a gap -> good
-                alignment_shift_dict[fitness_resid] = pdb_resid
-            elif fitness_res == pdb_res:
-                # the fitness data does contain this residue in the PDB and alignment has matched it -> good
-                alignment_shift_dict[fitness_resid] = pdb_resid
-            else:
-                raise ValueError(
-                    f"Unable to match fitness residue {fitness_res} ({fitness_resid}) to PDB residue {pdb_res} ({pdb_resid})"
-                )
+        to_remove = []
 
-        return alignment_shift_dict
+        # first we grab the starting indices for fitness ('CSV') and complex ('PDB') by slicing
+        # the alignment object view. Hacky but robust, no method implemented in BioPython for this.
+        start_idx_fitness = int(alignment.format().splitlines()[0].split()[1])
+        start_idx_complex = int(alignment.format().splitlines()[2].split()[1])
+        # print(f"Start fitness: {start_idx_fitness}, start complex: {start_idx_complex}") # DEBUG
+
+        # now we will loop over the alignment. We need both the fitness and complex residues
+        # and the original indices.
+
+        # this might break if the PDB is longer than the fitness data?
+        for fitness_res, complex_res in zip(alignment[0], alignment[1]):
+            # print(start_idx_fitness, fitness_res, complex_res, start_idx_complex) # DEBUG
+            if fitness_res == complex_res:
+                # good match. Can add this fitness data to the dict. Can bump both.
+                alignment_shift_dict[start_idx_fitness] = start_idx_complex
+                start_idx_fitness += 1
+                start_idx_complex += 1
+            else:
+                # bad match.
+                to_remove.append(start_idx_complex)
+                if complex_res == "-":
+                    # there is a gap in the fitness data.
+                    # skip over this fitness datapoint only
+                    start_idx_fitness += 1
+                else:
+                    # the alignment matched a fitness residue to the wrong residue type, can happen in e.g. point mutations
+                    # in this case we also need to skip over the protein residue
+                    start_idx_complex += 1
+                    start_idx_fitness += 1
+
+        return alignment_shift_dict, to_remove
 
     def fitness_reset_keys(self, alignment):
         """
@@ -98,16 +125,17 @@ class AlignFactory:
         represented as 'empty' dict entries. This way the fitness HTML view will have 'empty' fitness data
         for those residues.
         """
-        alignment_dict = self.get_fitness_alignment_shift_dict(alignment)
+        alignment_dict, to_remove = self.get_fitness_alignment_shift_dict(alignment)
         reset_dict = {}
+
         for _, fitness_data in self.fitness_input.items():
             # we build a new dict where keys are the aligned index, then the aligned/unaligned indices (provenance),
             # then wildtype data and then per-mutant fitness data
 
             if not fitness_data["fitness_csv_index"] in alignment_dict.keys():
-                logger.warn(
-                    f"Fitness data found to have a residue (index {fitness_data['fitness_csv_index']}) not in the PDB - skipping."
-                )
+                # logger.warn( # disabled for now, can spam a lot
+                #     f"Fitness data found to have a residue (index {fitness_data['fitness_csv_index']}) not in the PDB - skipping."
+                # )
                 continue
 
             reset_dict[alignment_dict[fitness_data["fitness_csv_index"]]] = {
@@ -117,6 +145,19 @@ class AlignFactory:
                 **fitness_data,
             }
 
+        """
+        are we just setting the wrong indexing somewhere? 
+        looks like we might be taking the fitness residue 
+        instead of complex?
+        """
+        print(to_remove)
+        print(reset_dict.keys())
+        for resi_to_remove in set(to_remove):
+            # remove complex indices that we have no fitness data for. We'll fill these with empty fitness data
+            # later on.
+            if resi_to_remove in reset_dict:
+                reset_dict.pop(resi_to_remove)
+
         return reset_dict
 
     def fill_aligned_fitness(self, aligned_fitness_dict):
@@ -125,14 +166,29 @@ class AlignFactory:
         for easier parsing during visualization.
         """
         filled_aligned_fitness_dict = {}
-
+        print(aligned_fitness_dict.keys())
         for complex_idx, complex_res in zip(
             self.complex_get_seqidcs(), self.complex_get_seq()
         ):
             if complex_res == "X":
-                continue  # this is a ligand, we can skip because we don't show fitness for this anyway
+                continue  # this is a ligand or water, we can skip because we don't show fitness for this anyway
 
-            if complex_idx in aligned_fitness_dict:
+            if complex_idx not in aligned_fitness_dict:
+                # no fitness data for this residue in the complex, need to make an empty one
+                filled_aligned_fitness_dict[complex_idx] = {"wildtype": {complex_res}}
+            elif complex_idx in aligned_fitness_dict:
+                print(
+                    f"{complex_idx}:{self.complex_get_seq()[complex_idx]} should be {aligned_fitness_dict[complex_idx]['wildtype']['aa']}:{aligned_fitness_dict[complex_idx]['fitness_csv_index']}"
+                )  # DEBUG
+                # check that the fitness wildtype equals the protein PDB residue type
+                if (
+                    not self.complex_get_seq()[complex_idx]
+                    == aligned_fitness_dict[complex_idx]["wildtype"]["aa"]
+                ):
+                    # hard stop - this is a critical alignment mismatch
+                    raise ValueError(
+                        f"Alignment mismatch between wildtype and PDB!\n\nFitness: {aligned_fitness_dict[complex_idx]}\n\nProtein: {complex_idx}{complex_res}"
+                    )
                 # this fitness-complex data matches, can just copy the data across
                 filled_aligned_fitness_dict[complex_idx] = aligned_fitness_dict[
                     complex_idx
@@ -140,6 +196,16 @@ class AlignFactory:
             else:
                 # no fitness data for this residue in the complex, need to make an empty one
                 filled_aligned_fitness_dict[complex_idx] = {"wildtype": {complex_res}}
+
+        for i, j in filled_aligned_fitness_dict.items():
+            print()
+            print(i, j)
+            break
+        # so alignment indices are correct now, but for some reason the wrong logoplots are showing up?
+        # do the wildtypes in the filled_aligned_fitness_dict correspond? why
+        # are the surface colors wrong??
+
+        # for some reason the indices in filled_aligned_fitness_dict are fucked, fitness_csv_index should start at 50
 
         return filled_aligned_fitness_dict, len(filled_aligned_fitness_dict) - len(
             aligned_fitness_dict
@@ -152,8 +218,9 @@ class AlignFactory:
         """
 
         aligner = Align.PairwiseAligner()
+        aligner.mode = "local"
         aligner.open_gap_score = (
-            -10
+            -20
         )  # set these to make gaps happen less. With fitness data we know there shouldn't
         aligner.extend_gap_score = -0.5  # really be any gaps.
         aligner.substitution_matrix = substitution_matrices.load(
