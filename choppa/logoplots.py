@@ -208,6 +208,7 @@ class LogoPlot:
 
         plt.xticks([])
         plt.yticks([])
+        plt.annotate("poep", xy=(0.8, 0.05), xycoords="axes fraction", size=20)
         # plt.savefig("debug_logoplot.png", dpi=70, bbox_inches="tight") # uncomment for testing
         # plt object directly to base64 string instead of tmpfile
         lp_bytes = io.BytesIO()

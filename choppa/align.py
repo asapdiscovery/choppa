@@ -1,6 +1,7 @@
 import logging, sys
 from collections import OrderedDict
 from Bio import PDB, SeqUtils, Align
+
 from Bio.Align import substitution_matrices
 
 logging.basicConfig(stream=sys.stdout, level=logging.INFO)
@@ -61,32 +62,65 @@ class AlignFactory:
         """
         return [res.get_id()[1] for res in self.complex.get_residues()]
 
+    def alignment_idx_to_original_idx(self, alignment):
+        """
+        The BioPython alignment shifts indices freely based on query/target overlap. This function
+        return a dict that maps the new indices in the alignment back to the old/original index sequence.
+        """
+        aligned_to_idx = {}
+        counter = 0
+        for i, res in enumerate(alignment):
+            if res == "-":
+                aligned_to_idx[i] = None
+            else:
+                aligned_to_idx[i] = counter
+                counter += 1
+
+        return aligned_to_idx
+
     def get_fitness_alignment_shift_dict(self, alignment):
         """
         Given an input complex sequence with residue indices (may not start at 0) and the fitness-complex
         alignment, creates a dictionary with indices that should be used for the fitness data of the form
         {fitness_idx : aligned_idx}
         """
+        fitness_idx_dict = self.alignment_idx_to_original_idx(alignment[0])
+        complex_idx_dict = self.alignment_idx_to_original_idx(alignment[1])
 
         alignment_shift_dict = {}
-        for fitness_res, fitness_resid, pdb_res, pdb_resid in zip(
-            alignment[0],
-            self.fitness_get_seqidcs(),
-            alignment[1],
-            self.complex_get_seqidcs(),
+        for i, (ali_fitness_res, ali_complex_res) in enumerate(
+            zip(
+                alignment[0],
+                alignment[1],
+            )
         ):
-            # do some checks before adding to the alignment dict. we do these checks at multiple layers to be 100% sure we're not mismatching the two sequences.
-            if fitness_res == "-" and fitness_res != pdb_res:
-                # the fitness data does not contain this residue in the PDB and alignment has created a gap -> good
-                alignment_shift_dict[fitness_resid] = pdb_resid
-            elif fitness_res == pdb_res:
-                # the fitness data does contain this residue in the PDB and alignment has matched it -> good
-                alignment_shift_dict[fitness_resid] = pdb_resid
-            else:
-                raise ValueError(
-                    f"Unable to match fitness residue {fitness_res} ({fitness_resid}) to PDB residue {pdb_res} ({pdb_resid})"
-                )
-
+            if fitness_idx_dict[i] and complex_idx_dict[i]:
+                # this means that there is an alignment on this index.
+                # get the original fitness/complex residue types on this index so we can double-check
+                ori_fitness_res = self.fitness_get_seq()[fitness_idx_dict[i]]
+                ori_complex_res = self.complex_get_seq()[complex_idx_dict[i]]
+                if ali_fitness_res == ali_complex_res:
+                    # there is a residue match
+                    if (  # these should always all be the same - otherwise the final fitness view will have mismatched fitness per residue
+                        not ali_fitness_res
+                        == ali_complex_res
+                        == ori_fitness_res
+                        == ori_complex_res
+                    ):
+                        raise ValueError(
+                            "Alignment failed; unable to match aligned sequence indices back to original sequence indices - check your alignment."
+                        )
+                    # okay, so for the aligned sequences we need to map the ORIGINAL fitness sequence indices
+                    # to the ORIGINAL complex sequence indices using the alignment. Because we've grabbed the
+                    # ORIGINAL indices using self.alignment_idx_to_original_idx() we know these are correct.
+                    alignment_shift_dict[
+                        self.fitness_get_seqidcs()[fitness_idx_dict[i]]
+                    ] = self.complex_get_seqidcs()[complex_idx_dict[i]]
+                else:
+                    # either a mismatch (point mutation) or ligand. Can just not add to alignment dict, will
+                    # be ignored downstream and result in a black residue (no fitness data) in case there is
+                    # a complex residue.
+                    pass
         return alignment_shift_dict
 
     def fitness_reset_keys(self, alignment):
@@ -103,11 +137,10 @@ class AlignFactory:
         for _, fitness_data in self.fitness_input.items():
             # we build a new dict where keys are the aligned index, then the aligned/unaligned indices (provenance),
             # then wildtype data and then per-mutant fitness data
-
             if not fitness_data["fitness_csv_index"] in alignment_dict.keys():
-                logger.warn(
-                    f"Fitness data found to have a residue (index {fitness_data['fitness_csv_index']}) not in the PDB - skipping."
-                )
+                # logger.warn( # bit too chatty - disable for now.
+                #     f"Fitness data found to have a residue (index {fitness_data['fitness_csv_index']}) not in the PDB - skipping."
+                # )
                 continue
 
             reset_dict[alignment_dict[fitness_data["fitness_csv_index"]]] = {
@@ -150,25 +183,26 @@ class AlignFactory:
         Aligns two AA sequences with BioPython's `PairwiseAligner` (https://biopython.org/DIST/docs/tutorial/Tutorial.html#sec128).
         We do a local alignment with BLOSUM to take evolutionary divergence into account.
         """
-
         aligner = Align.PairwiseAligner()
+        aligner.mode = "global"  # this means that both alignments (fitness/PDB) start at index 0. Easier for downstream.
         aligner.open_gap_score = (
-            -10
-        )  # set these to make gaps happen less. With fitness data we know there shouldn't
-        aligner.extend_gap_score = -0.5  # really be any gaps.
+            -20
+        )  # set these to make gaps happen less. With fitness data we know there shouldn't really be any gaps.
+        aligner.extend_gap_score = 2
         aligner.substitution_matrix = substitution_matrices.load(
-            "BLOSUM62"
-        )  # SOTA alignment matrix
-        alignments = aligner.align(fitness_seq, complex_seq)  # produces a generator
+            "PAM70"
+        )  # found this algorithm by comparing all available in BioPython
+        # produces a generator but we can just pick the top one
+        alignment = aligner.align(fitness_seq, complex_seq)[0]
 
         # if len(alignments) > 1:
         #     # can implement a fix once we hit a system that has this; not sure how to handle other than take the top alignment
         #     raise NotImplementedError(f"More than 1 alignments found, this is currently not implemented.")
         logging.info(
-            f"Found alignment:\n{str(alignments[0]).replace('target', 'CSV   ').replace('query', 'PDB  ')}"
+            f"Found alignment:\n{str(alignment).replace('target', 'CSV   ').replace('query', 'PDB  ')}"
         )
 
-        return alignments[0]
+        return alignment
 
     def align_fitness(self):
         """
