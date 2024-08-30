@@ -95,6 +95,7 @@ class AlignFactory:
             )
         ):
             if fitness_idx_dict[i] and complex_idx_dict[i]:
+                
                 # this means that there is an alignment on this index.
                 # get the original fitness/complex residue types on this index so we can double-check
                 ori_fitness_res = self.fitness_get_seq()[fitness_idx_dict[i]]
@@ -133,6 +134,8 @@ class AlignFactory:
         for those residues.
         """
         alignment_dict = self.get_fitness_alignment_shift_dict(alignment)
+        print(alignment_dict)
+        raise Exception
         reset_dict = {}
         for _, fitness_data in self.fitness_input.items():
             # we build a new dict where keys are the aligned index, then the aligned/unaligned indices (provenance),
@@ -183,6 +186,13 @@ class AlignFactory:
         Aligns two AA sequences with BioPython's `PairwiseAligner` (https://biopython.org/DIST/docs/tutorial/Tutorial.html#sec128).
         We do a local alignment with BLOSUM to take evolutionary divergence into account.
         """
+        # dump the seqs
+        # print("FITNESS_SEQ")
+        # for i, f in enumerate(fitness_seq):
+        #     print(i, f)
+        # print("COMPLEX_SEQ")
+        # for i, f in enumerate(complex_seq):
+        #     print(i, f)
         aligner = Align.PairwiseAligner()
         aligner.mode = "global"  # this means that both alignments (fitness/PDB) start at index 0. Easier for downstream.
         aligner.open_gap_score = (
@@ -211,16 +221,63 @@ class AlignFactory:
         logger.info("Aligning fitness sequence to complex..\n")
         alignment = self.get_alignment(self.fitness_get_seq(), self.complex_get_seq())
 
-        aligned_fitness = self.fitness_reset_keys(alignment)
+        aligned_fitness = self.reset_keys2(alignment)
 
-        filled_aligned_fitness_dict, num_filled = self.fill_aligned_fitness(
-            aligned_fitness
-        )
-        logger.info(
-            f"After aligning fitness data to PDB complex, filled {num_filled} empty entries in the fitness sequence (total entries in sequence: {len(self.complex_get_seq())}).\n"
-        )
+        # filled_aligned_fitness_dict, num_filled = self.fill_aligned_fitness(
+        #     aligned_fitness
+        # )
+        # logger.info(
+        #     f"After aligning fitness data to PDB complex, filled {num_filled} empty entries in the fitness sequence (total entries in sequence: {len(self.complex_get_seq())}).\n"
+        # )
 
-        return filled_aligned_fitness_dict
+        return aligned_fitness
+
+
+    def reset_keys2(self, alignment):
+        # print(type(alignment))
+        import numpy as np
+        fitness_indices = np.asarray(alignment.indices[0])
+        # print(fitness_indices)
+        # print(np.asarray(alignment.inverse_indices[0]))
+
+        # print(len(fitness_indices))
+        complex_indices = np.asarray(alignment.indices[1])
+        # print(complex_indices)
+        print(np.asarray(alignment.inverse_indices[1]))
+        inv_i = np.asarray(alignment.inverse_indices[1])
+        translation_dict = {}
+        for i, (fitness_idx, complex_idx) in enumerate(zip(fitness_indices, complex_indices)):
+            if fitness_idx != -1 and complex_idx != -1 and alignment[1][i] != "X":
+                translation_dict[fitness_idx] = complex_idx
+        
+        inv_translation_dict = {v: k for k, v in translation_dict.items()}
+        
+        print(inv_translation_dict)
+        print(translation_dict)
+        data = self.fitness_input.copy()
+
+        newdata = {}
+        for k, v in data.items():
+            if k in translation_dict:
+                print(v["wildtype"]["aa"])
+                newdata[translation_dict[k]] = v
+                print(translation_dict[k], v)
+
+            
+            
+
+
+                         
+
+
+
+        return newdata
+            
+
+            
+
+
+
 
 
 if __name__ == "__main__":

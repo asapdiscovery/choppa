@@ -126,10 +126,14 @@ def render(
         fitness_colname=fitness_column,
         confidence_colname=confidence_column,
     ).get_fitness_basedict()
+
     complex = ComplexFactory(pdb_file).load_pdb()
     complex_rdkit = ComplexFactory(pdb_file).load_pdb_rdkit()
 
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
+    for k, v in filled_aligned_fitness_dict.items():
+        print(k, v["wildtype"])
+
 
     PublicationView(
         filled_aligned_fitness_dict,
