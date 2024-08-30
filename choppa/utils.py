@@ -44,6 +44,8 @@ def biopython_to_mda(BP_complex):
     return u
 
 
+
+
 def get_pdb_components(PDB_str, remove_solvent=True):
     """
     Split a protein-ligand pdb into protein and ligand components
@@ -234,3 +236,27 @@ def get_contacts_mda(
                 contacts.append([contacted_lig_at, contacted_res_at])
 
     return contacts
+
+
+def renumber_residues(pdb_str):
+    from Bio.PDB import PDBParser
+    from Bio.PDB.PDBIO import PDBIO
+    parser = PDBParser()
+    # read str into tempfile 
+    with tempfile.NamedTemporaryFile(mode="w") as temp:
+        temp.write(pdb_str)
+        temp.seek(0)
+        structure = parser.get_structure("temp", temp.name)
+        counter = 0
+        for model in structure:
+            for chain in model:
+                for residue in chain:
+                    residue.id = (residue.id[0], counter, residue.id[2])
+                    counter +=1
+        print(counter)
+        io=PDBIO()
+        io.set_structure(structure)
+        io.save("renumbered.pdb")
+        with open("renumbered.pdb") as f:
+            return f.read() 
+        

@@ -262,13 +262,8 @@ class AlignFactory:
                 print(v["wildtype"]["aa"])
                 newdata[translation_dict[k]] = v
                 print(translation_dict[k], v)
-
-            
-            
-
-
                          
-
+        
 
 
         return newdata

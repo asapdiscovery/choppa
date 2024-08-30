@@ -15,6 +15,7 @@ from choppa.utils import (
     split_pdb_str,
     get_contacts_mda,
     biopython_to_mda,
+    renumber_residues,
 )
 from choppa.logoplots import (
     LogoPlot,
@@ -64,6 +65,8 @@ class PublicationView:
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
+        # renumber the residues, passing through MDA
+        self.complex_pdb_str = renumber_residues(self.complex_pdb_str)
 
     def pymol_start_session(self):
         """
@@ -313,6 +316,7 @@ class InteractiveView:
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
+        self.complex_pdb_str = renumber_residues(self.complex_pdb_str)  
 
     def get_confidence_limits(self):
         """
@@ -334,7 +338,7 @@ class InteractiveView:
         else:
             return [min(confidence_values), max(confidence_values)]
 
-    def get_logoplot_dict(self, confidence_lims, multiprocess=True, max_workers=None):
+    def get_logoplot_dict(self, confidence_lims, multiprocess=False, max_workers=None):
         """
         For a fitness dict, load all base64 logoplots into memory using multithreading if requested.
 
@@ -396,7 +400,8 @@ class InteractiveView:
             return (
                 {
                     "fitness_aligned_index": idx,
-                    "fitness_csv_index": idx,
+                    "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
+                    "aa": None,
                     "logoplots_base64": {
                         "wildtype": render_singleres_logoplot(
                             "".join(residue_fitness_dict["wildtype"])
@@ -417,8 +422,9 @@ class InteractiveView:
 
         return (
             {
-                "fitness_aligned_index": residue_fitness_dict["fitness_aligned_index"],
+                "fitness_aligned_index": idx,
                 "fitness_csv_index": residue_fitness_dict["fitness_csv_index"],
+                "aa": residue_fitness_dict["wildtype"]["aa"],
                 "logoplots_base64": {
                     "wildtype": wildtype_base64,
                     "fit": fit_base64,
@@ -539,7 +545,8 @@ class InteractiveView:
         """
         # create a bunch of DIVs of the logoplots.
         logoplot_divs = ""
-        for _, logoplot_data in logoplot_dict.items():
+        for k, logoplot_data in logoplot_dict.items():
+            print(k, logoplot_data["aa"])
             wt = logoplot_data["logoplots_base64"]["wildtype"]
             fit = logoplot_data["logoplots_base64"]["fit"]
             unfit = logoplot_data["logoplots_base64"]["unfit"]
