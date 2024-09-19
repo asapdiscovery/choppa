@@ -35,10 +35,6 @@
         "URL" : "https://nextstrain.org/zika",
         "genes" : ["2K", "CA", "ENV", "MP", "NS1", "NS2A", "NS2B", "NS3", "NS4A", "NS4B", "NS5", "PRO"]
     },
-    "WNV" : {
-        "URL" : "https://nextstrain.org/WNV/NA",
-        "genes" : ["capsid", "prM", "env", "NS1", "NS2A", "NS2B", "NS3", "NS4A", "2K", "NS4B", "NS5"]
-    },
     "MUMPS" : {
         "URL" : "https://nextstrain.org/mumps/na",
         "genes" : ["F", "HN", "I", "L", "M", "NC", "P", "SH", "V"]
