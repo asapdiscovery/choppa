@@ -35,11 +35,19 @@
         "URL" : "https://nextstrain.org/zika",
         "genes" : ["2K", "CA", "ENV", "MP", "NS1", "NS2A", "NS2B", "NS3", "NS4A", "NS4B", "NS5", "PRO"]
     },
+    "WNV" : {
+        "URL" : "https://nextstrain.org/WNV/NA",
+        "genes" : ["capsid", "prM", "env", "NS1", "NS2A", "NS2B", "NS3", "NS4A", "2K", "NS4B", "NS5"]
+    },
     "MUMPS" : {
         "URL" : "https://nextstrain.org/mumps/na",
         "genes" : ["F", "HN", "I", "L", "M", "NC", "P", "SH", "V"]
     },
-    "ENTEROVIRUS" : {
+    "EVD68" : {
+        "URL" : "https://nextstrain.org/enterovirus/d68/genome",
+        "genes" : ["2A", "2B", "2C", "3A", "3B", "3C", "3D", "VP1", "VP2", "VP3", "VP4"]
+    },
+    "EVDA71" : {
         "URL" : "https://nextstrain.org/enterovirus/d68/genome",
         "genes" : ["2A", "2B", "2C", "3A", "3B", "3C", "3D", "VP1", "VP2", "VP3", "VP4"]
     }
