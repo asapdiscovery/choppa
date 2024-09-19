@@ -92,15 +92,19 @@ def fetch_nextstrain_json(url):
 def fetch_nextstrain_root_sequence(url):
     # Header to request the root sequence data
     headers = {"Accept": "application/vnd.nextstrain.dataset.root-sequence+json"}
+    try:
+        # Make a GET request to the specified URL
+        response = requests.get(url, headers=headers)
+        # Raise an exception if the status code is not 2xx
+        response.raise_for_status()
 
-    # Make a GET request to the specified URL
-    response = requests.get(url, headers=headers)
-
-    # Raise an exception if the request failed
-    response.raise_for_status()
-    # raise specific errors here?
-
-    return response.json()
+        return response.json()
+    except requests.exceptions.HTTPError as http_err:
+        # If a 404 error occurs, return None so we can handle it later
+        if response.status_code == 404:
+            return None
+        else:
+            raise http_err
 
 
 def nextstrain_json_to_tree(json_dict, root=True, parent_cumulative_branch_length=None):

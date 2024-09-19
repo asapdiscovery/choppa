@@ -209,6 +209,16 @@ def nextstrain(
     # Fetch the root sequence data
     root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
 
+    if root_sequence_json is None:
+        # Fallback to tree_json if the root sequence is not available via the URL
+        if "root_sequence" in tree_json:
+            root_sequence_json = tree_json["root_sequence"]
+        else:
+            # Fail if no root sequence is available
+            raise ValueError(
+                "Root sequence is missing from the Nextstrain API and the main tree data."
+            )
+
     # Make a tree from the JSON data
     tree = nextstrain_json_to_tree(tree_json)
 
