@@ -1,18 +1,20 @@
 import re
-import math
-import copy
 import requests
 import json
 from urllib.parse import urlparse
 
 import pandas as pd
-import click
 
-import altair as alt
-from Bio import Phylo
+from Bio import Phylo, GenBank, SeqIO
 from augur.utils import annotate_parents_for_tree
 
-from choppa.data.metadata.resources import NEXTSTRAIN_METADATA
+from choppa.data.metadata.resources import (
+    NEXTSTRAIN_METADATA,
+    MERS_GENOME_TREE_JSON,
+    MERS_GENOME_ROOT_SEQUENCE,
+    MERS_REAL_GENE_TO_COMMUNITY_GENE,
+    MERS_TARGET_TO_REAL_GENE,
+)
 
 AMINO_ACIDS = [
     "A",
@@ -89,7 +91,43 @@ def fetch_nextstrain_json(url):
     return response.json()
 
 
-def fetch_nextstrain_root_sequence(url):
+def fetch_nextstrain_json_mers_cov():
+    with open(MERS_GENOME_TREE_JSON) as f:
+        return json.load(f)
+
+
+def fetch_mers_cov_sequence():
+    """Returns a dict with sequences belonging to MERS-CoV based on https://raw.githubusercontent.com/nextstrain/mers/refs/heads/master/config/mers_reference.gb"""
+    root_sequence_json = {}
+
+    with open(MERS_GENOME_ROOT_SEQUENCE) as handle:
+        # use the somewhat convoluted BioPython GenBank parses to get per-gene protein sequences
+        for record in GenBank.parse(handle):
+            # see https://biopython.org/docs/1.76/api/Bio.GenBank.Record.html?highlight=qualifier#Bio.GenBank.Record.Qualifier
+            for feat in record.features:
+                gene = seq = None
+                if len(feat.qualifiers) == 1:
+                    continue
+                for qual in feat.qualifiers:
+                    if qual.key == "/gene=":
+                        gene = qual.value.replace('"', "")
+                    elif qual.key == "/translation=":
+                        seq = qual.value.replace('"', "")
+                if gene and seq:
+                    root_sequence_json[gene] = seq
+
+    # use Bio.Seq parse genbank to get the 'nuc' entry for the dict
+    gb_entries = SeqIO.parse(MERS_GENOME_ROOT_SEQUENCE, "genbank")
+    root_sequence_json["nuc"] = str(
+        [entry for entry in gb_entries][0].seq
+    )  # always only a single item in the iterator
+    return root_sequence_json
+
+
+def fetch_nextstrain_root_sequence(url, MERS_COV=False):
+    if MERS_COV:  # we've defined this one ourselves, see metadata for notes
+        return fetch_mers_cov_sequence()
+
     # Header to request the root sequence data
     headers = {"Accept": "application/vnd.nextstrain.dataset.root-sequence+json"}
     try:
@@ -345,12 +383,16 @@ def count_mutations_events(metadata_df, gene):
     return mutation_count_df
 
 
-def finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile):
+def finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile, mers=False):
+    if mers:
+        # revert the gene back to the name found in the GenBank reference
+        inverse_naming_df = {j: i for i, j in MERS_REAL_GENE_TO_COMMUNITY_GENE.items()}
+        gene = inverse_naming_df[gene]
+
     root_sequence_df = pd.DataFrame(
         [(i + 1, aa) for i, aa in enumerate(root_sequence_json[gene])],
         columns=["position", "residue"],
     )
-
     # add them together so that we have a df with wildtypes, mutations and each mutation's count
     counts_df = root_sequence_df.merge(mutation_count_df, on="position")
 

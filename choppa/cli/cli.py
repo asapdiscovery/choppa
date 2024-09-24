@@ -5,6 +5,13 @@ from typing import Optional
 from choppa.IO.input import FitnessFactory, ComplexFactory
 from choppa.align import AlignFactory
 from choppa.render import PublicationView, InteractiveView
+
+
+from choppa.data.metadata.resources import (
+    MERS_REAL_GENE_TO_COMMUNITY_GENE,
+    MERS_TARGET_TO_REAL_GENE,
+)
+
 from choppa.cli.utils import SpecialHelpOrder
 from pathlib import Path
 
@@ -185,6 +192,7 @@ def nextstrain(
         get_url,
         fetch_nextstrain_json,
         fetch_nextstrain_root_sequence,
+        fetch_nextstrain_json_mers_cov,
         nextstrain_json_to_tree,
         extract_tree_data,
         count_mutations_events,
@@ -195,19 +203,18 @@ def nextstrain(
     if not Path(outfile).suffix == ".csv":
         raise ValueError("-o/--outfile should end in '.csv'.")
 
-    """
-    TODO
-    check that input works with choppa view generator
-    prod Will to resolve URL issues for e.g. zika
-    populate metadata with URLs and genes - more cleverly?
-    """
     download_url, nextstrain_tree_url = get_url(virus, gene)
 
     # Fetch the JSON data from the data URL
-    tree_json = fetch_nextstrain_json(download_url)
-
     # Fetch the root sequence data
-    root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
+    if virus == "MERS-CoV":
+        tree_json = fetch_nextstrain_json_mers_cov()
+        root_sequence_json = fetch_nextstrain_root_sequence(
+            nextstrain_tree_url, MERS_COV=True
+        )
+    else:
+        tree_json = fetch_nextstrain_json(download_url)
+        root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
 
     if root_sequence_json is None:
         # Fallback to tree_json if the root sequence is not available via the URL
@@ -228,7 +235,15 @@ def nextstrain(
     )
 
     # Count terminal mutations
+    treating_mers = False
+    if virus == "MERS-CoV":
+        # rename to match inconsistent gene naming in this community contribution NextStrain
+        gene = MERS_REAL_GENE_TO_COMMUNITY_GENE[MERS_TARGET_TO_REAL_GENE[gene]]
+        treating_mers = True
+
     mutation_count_df = count_mutations_events(metadata_df, gene)
 
     # finalize dataframe by adding mutations and root sequence together
-    df = finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile)
+    _ = finalize_dataframe(
+        mutation_count_df, root_sequence_json, gene, outfile, mers=treating_mers
+    )

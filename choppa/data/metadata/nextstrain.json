@@ -3,6 +3,10 @@
         "URL" : "https://nextstrain.org/ncov/gisaid/global/6m",
         "genes" : ["ORF1a", "ORF1b", "S", "ORF3a", "E", "M", "ORF6", "ORF7a", "ORF7b", "ORF8", "N", "ORF9b"]  
     },
+    "MERS-CoV" : {
+        "URL" : "https://nextstrain.org/community/wqshi/merse",
+        "genes" : ["S", "ORF3", "ORF4a", "ORF4b", "ORF5", "E", "M", "N", "ORF8b" ]
+    },
     "INFLUENZA" : {
         "URL" : "https://nextstrain.org/seasonal-flu/h3n2/ha/2y",
         "genes" : ["HA1", "HA2", "SigPep"]
@@ -48,3 +52,4 @@
         "genes" : ["2A", "2B", "2C", "3A", "3B", "3C", "3D", "VP1", "VP2", "VP3", "VP4"]
     }
 }
+
