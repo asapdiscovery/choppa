@@ -67,7 +67,7 @@ def get_url(virus, gene):
 
     # get the URL from metadata for this virus
     parsed_url = urlparse(nextstrain_metadata[virus]["URL"])
-    if not  parsed_url.netloc == "nextstrain.org":
+    if not parsed_url.netloc == "nextstrain.org":
         raise ValueError("URL is not from nextstrain, something went wrong")
 
     # Extract the path
@@ -150,6 +150,7 @@ def nextstrain_json_to_tree(json_dict, root=True, parent_cumulative_branch_lengt
     """
     Follow the exact same logic that the NextStrain backend follows when calculating per-residue mutation frequencies.
     By John Huddleston.
+    Reference JS: https://github.com/nextstrain/auspice/blob/e6e4d1a67be4648839f5aff43cb13ce30b23aaa6/src/util/entropy.js#L45-L134
     """
     # Check for v2 JSON which has combined metadata and tree data.
     if root and "meta" in json_dict and "tree" in json_dict:
@@ -384,7 +385,9 @@ def count_mutations_events(metadata_df, gene):
     return mutation_count_df
 
 
-def finalize_dataframe(mutation_count_df, root_sequence_json, gene, outfile, mers=False):
+def finalize_dataframe(
+    mutation_count_df, root_sequence_json, gene, outfile, mers=False
+):
     if mers:
         # revert the gene back to the name found in the GenBank reference
         inverse_naming_df = {j: i for i, j in MERS_REAL_GENE_TO_COMMUNITY_GENE.items()}
