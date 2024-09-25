@@ -237,31 +237,68 @@ class AlignFactory:
         # print(type(alignment))
         import numpy as np
         fitness_indices = np.asarray(alignment.indices[0])
-        # print(fitness_indices)
-        # print(np.asarray(alignment.inverse_indices[0]))
+        print(fitness_indices)
+        print(np.asarray(alignment.inverse_indices[0]))
+
+        # map the fitness indices to the indices in the alignment
+        fit_to_align = {}
+        for i, idx in enumerate(fitness_indices):
+            if idx != -1:
+                fit_to_align[idx] = i
+
+        print("FIT TO ALIGN")
+        print(fit_to_align)
 
         # print(len(fitness_indices))
         complex_indices = np.asarray(alignment.indices[1])
-        # print(complex_indices)
+        print(complex_indices)
         print(np.asarray(alignment.inverse_indices[1]))
-        inv_i = np.asarray(alignment.inverse_indices[1])
+
+        complex_to_align = {}
+        align_to_sindex = {}
+        for i, idx in enumerate(complex_indices):
+            if idx != -1:
+                complex_to_align[idx] = i
+                align_to_sindex[i] = 1
+
+        print("COMPLEX TO ALIGN")
+        print(complex_to_align)
+
+        # import defaultdict
+        from collections import defaultdict
+
+        chain_data = defaultdict(list)
+        inv_chaindata = {}
+        for chain in self.complex.get_chains():
+            for res in chain.get_residues():
+                chain_data[chain.id].append(res.id[1])
+                inv_chaindata[res.id[1]] = chain.id
+
+        # print(chain_data)
+        # print(inv_chaindata)
+
         translation_dict = {}
         for i, (fitness_idx, complex_idx) in enumerate(zip(fitness_indices, complex_indices)):
+            # print(fitness_idx, complex_idx)
             if fitness_idx != -1 and complex_idx != -1 and alignment[1][i] != "X":
                 translation_dict[fitness_idx] = complex_idx
-        
-        inv_translation_dict = {v: k for k, v in translation_dict.items()}
-        
-        print(inv_translation_dict)
-        print(translation_dict)
-        data = self.fitness_input.copy()
 
-        newdata = {}
+        data = self.fitness_input.copy()
         for k, v in data.items():
-            if k in translation_dict:
-                print(v["wildtype"]["aa"])
-                newdata[translation_dict[k]] = v
-                print(translation_dict[k], v)
+            print(k, v)
+        raise Exception
+        # # raise Exception
+        # inv_translation_dict = {v: k for k, v in translation_dict.items()}
+        
+        # print(inv_translation_dict)
+        # print(translation_dict)
+
+        # newdata = {}
+
+        #     if k in inv_translation_dict:
+        #         print(v["wildtype"]["aa"])
+        #         newdata[inv_translation_dict[k]] = v
+        #         print(inv_translation_dict[k], v)
                          
         
 
