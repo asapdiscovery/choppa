@@ -49,7 +49,6 @@ def test_choppa_render_toy_mac1_sectioned(tmp_path):
     assert "".join([val.pop() for val in alignment[:4]]) == "SFSG"
     # assert "".join([val.pop() for val in alignment[6:25]]) == "KLTDNVYIKNADIVEEAKK"
     # TODO: fix this test
-    raise ValueError("S")
     render.PublicationView(
         filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
     ).render()
