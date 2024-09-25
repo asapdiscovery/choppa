@@ -67,7 +67,8 @@ def get_url(virus, gene):
 
     # get the URL from metadata for this virus
     parsed_url = urlparse(nextstrain_metadata[virus]["URL"])
-    assert parsed_url.netloc == "nextstrain.org"
+    if not  parsed_url.netloc == "nextstrain.org":
+        raise ValueError("URL is not from nextstrain, something went wrong")
 
     # Extract the path
     path = parsed_url.path[1:]
