@@ -53,7 +53,7 @@ def validate_virus_gene(virus, gene):
 
     if not gene in nextstrain_metadata[virus]["genes"]:
         raise ValueError(
-            f"Gene named '{gene}' not in genes on virus '{virus}' available on NextStrain: {nextstrain_metadata[virus]['genes']}"
+            f"Gene named '{gene}' not in genes of virus '{virus}' available on NextStrain: {nextstrain_metadata[virus]['genes']}"
         )
     return nextstrain_metadata
 
