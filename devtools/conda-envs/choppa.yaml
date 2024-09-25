@@ -38,7 +38,3 @@ dependencies:
   # nextstrain
   - altair
   - augur
-  
-  # Pip-only installs
-  #- pip:
-  #  - codecov
