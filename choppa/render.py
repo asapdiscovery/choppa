@@ -329,7 +329,7 @@ class InteractiveView:
 
                 for conf_val in mut_conf_values + [wildtype_conf_value]:
                     confidence_values.append(conf_val)
-        if math.isnan(confidence_values[0]):
+        if len(confidence_values) == 0 or math.isnan(confidence_values[0]):
             return False, False
         else:
             return [min(confidence_values), max(confidence_values)]
