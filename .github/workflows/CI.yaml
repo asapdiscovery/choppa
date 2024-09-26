@@ -39,10 +39,13 @@ jobs:
       - name: "Setup Micromamba"
         uses: mamba-org/setup-micromamba@v1
         with:
+          micromamba-version: '1.5.6-0'
+          micromamba-binary-path: ~/.local/bin/micromamba
           environment-file: devtools/conda-envs/choppa.yaml
           environment-name: test
           create-args: >-
             python=${{ matrix.python-version }}
+          init-shell: bash
 
       - name: Install package
         # conda setup requires this special shell
