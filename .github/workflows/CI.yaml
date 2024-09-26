@@ -41,7 +41,6 @@ jobs:
         with:
           environment-file: devtools/conda-envs/choppa.yaml
           environment-name: test
-          channels: conda-forge,defaults
           create-args: >-
             python=${{ matrix.python-version }}
 
