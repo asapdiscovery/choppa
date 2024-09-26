@@ -2,7 +2,7 @@ name: choppa
 channels:
 
   - conda-forge
-  - bio-conda
+  - bioconda
   - defaults
 
 dependencies:
