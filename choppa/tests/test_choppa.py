@@ -50,11 +50,19 @@ def test_choppa_render_toy_mac1_sectioned(tmp_path):
     # assert "".join([val["aa"] for val in alignment[6:25]]) == "KLTDNVYIKNADIVEEAKK"
     # TODO: fix this test
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.pse",
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.html",
     ).render()
 
     # we know the intended output, test on this.
@@ -104,11 +112,19 @@ def test_choppa_render_toy_mac1_sectioned_noconf(tmp_path):
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.pse",
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.html",
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164
@@ -131,11 +147,19 @@ def test_choppa_render_toy_mac1_full(tmp_path):
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.pse",
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.html",
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164
@@ -143,6 +167,7 @@ def test_choppa_render_toy_mac1_full(tmp_path):
     # check files exist
     assert (tmp_path / "test.pse").exists()
     assert (tmp_path / "test.html").exists()
+
 
 def test_choppa_render_toy_mac1_truncated(tmp_path):
     """Tests that `choppa` is able to render views on a fitness dataset that
@@ -157,11 +182,19 @@ def test_choppa_render_toy_mac1_truncated(tmp_path):
     filled_aligned_fitness_dict = AlignFactory(fitness_dict, complex).align_fitness()
 
     render.PublicationView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.pse"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.pse",
     ).render()
 
     render.InteractiveView(
-        filled_aligned_fitness_dict, complex, complex_rdkit, fitness_threshold=0.7, output_session_file=tmp_path/"test.html"
+        filled_aligned_fitness_dict,
+        complex,
+        complex_rdkit,
+        fitness_threshold=0.7,
+        output_session_file=tmp_path / "test.html",
     ).render()
 
     assert len(filled_aligned_fitness_dict) == 164

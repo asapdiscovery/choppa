@@ -5,8 +5,16 @@ from typing import Optional
 from choppa.IO.input import FitnessFactory, ComplexFactory
 from choppa.align import AlignFactory
 from choppa.render import PublicationView, InteractiveView
+
+
+from choppa.data.metadata.resources import (
+    MERS_REAL_GENE_TO_COMMUNITY_GENE,
+    MERS_TARGET_TO_REAL_GENE,
+)
+
 from choppa.cli.utils import SpecialHelpOrder
 from pathlib import Path
+
 
 @click.group(
     cls=SpecialHelpOrder,
@@ -114,7 +122,7 @@ def render(
     # check extensions
     if not Path(outfile_publication).suffix == ".pse":
         raise ValueError("--op/--outfile-publication should end in '.pse'.")
-   
+
     if not Path(outfile_interactive).suffix == ".html":
         raise ValueError("--oi/--outfile-interactive should end in '.html'.")
 
@@ -147,3 +155,95 @@ def render(
         fitness_threshold=fitness_threshold,
         output_session_file=outfile_interactive,
     ).render()
+
+
+@cli.command(
+    name="nextstrain",
+    help=". ",
+    short_help="From the database of NextStrain-maintained pathogen analyses (https://nextstrain.org), generate a data format suitable for choppa.render.",
+)
+@click.option(
+    "-v",
+    "--virus",
+    type=click.STRING,
+    help="Name of the virus to download mutation data for. See https://nextstrain.org/pathogens for a list of available viruses.",
+    required=True,
+)
+@click.option(
+    "-g",
+    "--gene",
+    type=click.STRING,
+    help="Name of the gene to download mutation data for. See e.g. https://nextstrain.org/zika for a view of available genes.",
+    required=True,
+)
+@click.option(
+    "-o",
+    "--outfile",
+    type=click.Path(exists=False, file_okay=True, dir_okay=False, writable=True),
+    help="Name of output file to write mutation data to in CSV. Should end in '.csv'.",
+    required=True,
+)
+def nextstrain(
+    virus: Optional[str] = None,
+    gene: Optional[str] = None,
+    outfile: Optional[str] = None,
+):
+    from choppa.nextstrain import (
+        get_url,
+        fetch_nextstrain_json,
+        fetch_nextstrain_root_sequence,
+        fetch_nextstrain_json_mers_cov,
+        nextstrain_json_to_tree,
+        extract_tree_data,
+        count_mutations_events,
+        finalize_dataframe,
+    )
+
+    # check extension
+    if not Path(outfile).suffix == ".csv":
+        raise ValueError("-o/--outfile should end in '.csv'.")
+
+    download_url, nextstrain_tree_url = get_url(virus, gene)
+
+    # Fetch the JSON data from the data URL
+    # Fetch the root sequence data
+    if virus == "MERS-CoV":
+        tree_json = fetch_nextstrain_json_mers_cov()
+        root_sequence_json = fetch_nextstrain_root_sequence(
+            nextstrain_tree_url, MERS_COV=True
+        )
+    else:
+        tree_json = fetch_nextstrain_json(download_url)
+        root_sequence_json = fetch_nextstrain_root_sequence(nextstrain_tree_url)
+
+    if root_sequence_json is None:
+        # Fallback to tree_json if the root sequence is not available via the URL
+        if "root_sequence" in tree_json:
+            root_sequence_json = tree_json["root_sequence"]
+        else:
+            # Fail if no root sequence is available
+            raise ValueError(
+                "Root sequence is missing from the Nextstrain API and the main tree data."
+            )
+
+    # Make a tree from the JSON data
+    tree = nextstrain_json_to_tree(tree_json)
+
+    # Extract the mutations from the tree
+    metadata_df = extract_tree_data(
+        tree, attributes=["mutations"], include_internal_nodes=True
+    )
+
+    # Count terminal mutations
+    treating_mers = False
+    if virus == "MERS-CoV":
+        # rename to match inconsistent gene naming in this community contribution NextStrain
+        gene = MERS_REAL_GENE_TO_COMMUNITY_GENE[MERS_TARGET_TO_REAL_GENE[gene]]
+        treating_mers = True
+
+    mutation_count_df = count_mutations_events(metadata_df, gene)
+
+    # finalize dataframe by adding mutations and root sequence together
+    _ = finalize_dataframe(
+        mutation_count_df, root_sequence_json, gene, outfile, mers=treating_mers
+    )

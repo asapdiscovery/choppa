@@ -15,13 +15,17 @@ on:
     #   (from https://help.github.com/en/actions/reference/events-that-trigger-workflows#scheduled-events-schedule)
     - cron: "0 0 * * 0"
 
+defaults:
+  run:
+    shell: bash -l {0}
+
 jobs:
   test:
     name: Test on ${{ matrix.os }}, Python ${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macOS-latest, ubuntu-latest, windows-latest]
+        os: [macOS-latest, ubuntu-latest]
         python-version: ["3.10", "3.11"]
       fail-fast: false
 
@@ -36,14 +40,18 @@ jobs:
           ulimit -a
 
       # More info on options: https://github.com/marketplace/actions/provision-with-micromamba
-      - name: "Setup Micromamba"
+    # More info on options: https://github.com/mamba-org/provision-with-micromamba
+      - name: Setup Conda Environment
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: devtools/conda-envs/choppa.yaml
           environment-name: test
-          channels: conda-forge,defaults
+          cache-environment: true
+          cache-downloads: true
+          cache-environment-key: environment-${{ steps.date.outputs.date }}
+          cache-downloads-key: downloads-${{ steps.date.outputs.date }}
           create-args: >-
-            python=${{ matrix.python-version }}
+            python==${{ matrix.python-version }}
 
       - name: Install package
         # conda setup requires this special shell

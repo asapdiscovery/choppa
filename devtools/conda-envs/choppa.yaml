@@ -2,11 +2,12 @@ name: choppa
 channels:
 
   - conda-forge
+  - bioconda
   - defaults
 
 dependencies:
   # Base depends
-  - python
+  - python <=3.11 # pinned for augur deps
   - pip
 
   # Data workflowing
@@ -32,9 +33,8 @@ dependencies:
 
   # docs
   - sphinx
-  - sphinx_rtd_theme 
-  
-  # Pip-only installs
-  #- pip:
-  #  - codecov
+  - sphinx_rtd_theme
 
+  # nextstrain
+  - altair
+  - augur
