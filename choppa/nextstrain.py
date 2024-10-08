@@ -377,7 +377,9 @@ def count_mutations_events(metadata_df, gene):
         for mutation, count in mutations.items():
             rows.append((position, mutation, count))
     mutation_count_df = pd.DataFrame(rows, columns=["position", "mutation", "count"])
-    mutation_count_df["position"] = mutation_count_df["position"].astype(int)
+    mutation_count_df["position"] = (
+        mutation_count_df["position"].astype(int) - 1
+    )  # correct for offset in NextStrain
     mutation_count_df = mutation_count_df.sort_values(by="position").reset_index(
         drop=True
     )
@@ -438,8 +440,10 @@ def finalize_dataframe(
                         "frequency": frequency,
                     }
                 )
+
     # add all rows into a single dataframe ready for usage with choppa.
     choppa_nextstrain_df = pd.DataFrame(choppa_nextstrain_data)
+
     if outfile:
         choppa_nextstrain_df.to_csv(outfile)
     return choppa_nextstrain_df
