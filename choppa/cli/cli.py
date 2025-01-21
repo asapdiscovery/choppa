@@ -107,10 +107,10 @@ def cli():
     required=False,
 )
 @click.option(
-    "-pa",
-    "--color-per-atom",
+    "-ob",
+    "--override-backbone",
     is_flag=True,
-    help="Color the fitness protein surface by atom rather than by residue: backbone atoms will always have a white fitness surface color.",
+    help="Color the fitness protein surface normally, but backbone atoms will always have a white fitness surface color.",
     required=False,
 )
 def render(
@@ -124,7 +124,7 @@ def render(
     wildtype_column: Optional[str] = None,
     mutant_column: Optional[str] = None,
     confidence_column: Optional[str] = None,
-    color_per_atom: Optional[bool] = False,
+    override_backbone: Optional[bool] = False,
 ):
 
     # check extensions
@@ -161,7 +161,7 @@ def render(
         complex,
         complex_rdkit,
         fitness_threshold=fitness_threshold,
-        color_per_atom=color_per_atom,
+        override_backbone=override_backbone,
         output_session_file=outfile_interactive,
     ).render()
 

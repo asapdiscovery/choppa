@@ -303,7 +303,7 @@ class InteractiveView:
         complex,
         complex_rdkit,
         fitness_threshold,
-        color_per_atom,
+        override_backbone,
         output_session_file="out.html",
     ):
         self.fitness_dict = filled_aligned_fitness_dict
@@ -314,7 +314,7 @@ class InteractiveView:
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
-        self.color_per_atom = color_per_atom
+        self.override_backbone = override_backbone
 
     def get_confidence_limits(self):
         """
@@ -461,6 +461,18 @@ class InteractiveView:
         """
         residue_coloring_function_js = ""
         start = True
+        if self.override_backbone:
+            # check if the residue atom is in backbone, if so just overwrite the color to make the
+            # contact color green.
+            backbone_atom_idcs = [
+                res.ix
+                for res in biopython_to_mda(self.complex).select_atoms(
+                    "protein and backbone"
+                )
+            ]
+            print(backbone_atom_idcs)
+            print(color_res_dict)
+            sys.exit()
         for color, residues in color_res_dict.items():
             residues = [
                 f"'{res}'" for res in residues
