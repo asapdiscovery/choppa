@@ -463,16 +463,22 @@ class InteractiveView:
         start = True
         if self.override_backbone:
             # check if the residue atom is in backbone, if so just overwrite the color to make the
-            # contact color green.
+            # surface color white.
             backbone_atom_idcs = [
-                res.ix
+                f"'{res.ix}'"
                 for res in biopython_to_mda(self.complex).select_atoms(
                     "protein and backbone"
                 )
             ]
-            print(backbone_atom_idcs)
-            print(color_res_dict)
-            sys.exit()
+            residue_coloring_function_js += (
+                "if (["
+                + ",".join(backbone_atom_idcs)
+                + "].includes(atom_atidx)){ \n return '"
+                + "#c0fac9"  # color the backbone atom light green
+                + "' \n "
+            )
+            start = False
+
         for color, residues in color_res_dict.items():
             residues = [
                 f"'{res}'" for res in residues
