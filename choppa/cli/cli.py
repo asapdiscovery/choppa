@@ -106,6 +106,13 @@ def cli():
     help="Name of the column in the fitness-file (-f/--fitness-file) that contains confidence values (e.g. counts). If not defined then LogoPlots in the HTML view will not display confidences.",
     required=False,
 )
+@click.option(
+    "-pa",
+    "--color-per-atom",
+    is_flag=True,
+    help="Color the fitness protein surface by atom rather than by residue: backbone atoms will always have a white fitness surface color.",
+    required=False,
+)
 def render(
     pdb_file: Optional[str] = None,
     fitness_file: Optional[str] = None,
@@ -117,6 +124,7 @@ def render(
     wildtype_column: Optional[str] = None,
     mutant_column: Optional[str] = None,
     confidence_column: Optional[str] = None,
+    color_per_atom: Optional[bool] = False,
 ):
 
     # check extensions
@@ -153,6 +161,7 @@ def render(
         complex,
         complex_rdkit,
         fitness_threshold=fitness_threshold,
+        color_per_atom=color_per_atom,
         output_session_file=outfile_interactive,
     ).render()
 

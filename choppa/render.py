@@ -303,6 +303,7 @@ class InteractiveView:
         complex,
         complex_rdkit,
         fitness_threshold,
+        color_per_atom,
         output_session_file="out.html",
     ):
         self.fitness_dict = filled_aligned_fitness_dict
@@ -313,6 +314,7 @@ class InteractiveView:
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
+        self.color_per_atom = color_per_atom
 
     def get_confidence_limits(self):
         """
