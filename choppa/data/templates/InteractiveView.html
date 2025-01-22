@@ -180,6 +180,7 @@
                          ////////////////// enable show residue number on hover
                          viewer.setHoverable({}, true,
                          function (atom, viewer, event, container) {
+                          console.log(atom.index, atom.elem, atom.atom)
                              if (!atom.label) {
                                  if (atom.chain === undefined){
                                   display_str = 'LIGAND';
