@@ -105,6 +105,7 @@
       </div>
       <div class="dropdown-content">
         <a href="#">⚪ : No amino acid substitutions tolerated</a>
+        <a href="#">🟢 : Backbone atom</a>
         <a href="#">🔴 : increasing tolerance for amino acid substitutions (increasing with 🔴 intensity)</a>
         <a href="#">🟣 : No data for residue</a>
       </div>
@@ -167,7 +168,8 @@
                          // define a coloring function based on our residue ranges. We can't call .addSurface separate times because the surfaces won't be merged nicely. 
                          var colorAsSnake = function(atom) {
                           atom_residx = String(atom.resi)
-                          atom_atidx = String(atom.index)
+                          atom_atidx = String(atom.serial)
+                          atom_elem = String(atom.atom)
                                 {{ SURFACE_COLOR_INSERT }}
                                           }};                         viewer.addSurface("MS", {colorfunc: colorAsSnake, opacity: 0.9}) 
                      
@@ -180,7 +182,7 @@
                          ////////////////// enable show residue number on hover
                          viewer.setHoverable({}, true,
                          function (atom, viewer, event, container) {
-                          console.log(atom.index, atom.elem, atom.atom)
+                          console.log(atom.index, atom.serial, atom.elem, atom.atom)
                              if (!atom.label) {
                                  if (atom.chain === undefined){
                                   display_str = 'LIGAND';

@@ -464,30 +464,8 @@ class InteractiveView:
         if self.override_backbone:
             # check if the residue atom is in backbone, if so just overwrite the color to make the
             # surface color white.
-            # first deprotonate the complex. A bit silly but 3DMol indexes on heavy atoms only, and
-            # it doesn't look like we can disable that behavior.
-            # for model in self.complex:
-            #     for chain in model:
-            #         for residue in chain:
-            #             atoms_to_remove = []
-            #             for atom in residue:
-            #                 if atom.element == "H":
-            #                     atoms_to_remove.append(atom.name)
-            #             for atom in atoms_to_remove:
-            #                 residue.detach_child(atom)
-
-            backbone_atom_idcs = [
-                f"'{res.ix +1}'"
-                for res in biopython_to_mda(self.complex).select_atoms(
-                    "protein and backbone"
-                )
-            ]
-            print(backbone_atom_idcs)
-            # print(self.complex_pdb_str)
             residue_coloring_function_js += (
-                "if (["
-                + ",".join(backbone_atom_idcs)
-                + "].includes(atom_atidx)){ \n return '"
+                "if (atom_elem == 'C' || atom_elem == 'CA' || atom_elem == 'N' || atom_elem == 'O'){ \n return '"
                 + "#c0fac9"  # color the backbone atom a minty light green
                 + "' \n "
             )
