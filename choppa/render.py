@@ -465,8 +465,11 @@ class InteractiveView:
             # check if the residue atom is in backbone, if so just overwrite the color to make the
             # surface color white.
             residue_coloring_function_js += (
-                "if (atom_elem == 'C' || atom_elem == 'CA' || atom_elem == 'N' || atom_elem == 'O'){ \n return '"
+                "if (atom_elem == 'C' || atom_elem == 'N' || atom_elem == 'O'){ \n return '"
                 + "#c0fac9"  # color the backbone atom a minty light green
+                + "' \n "
+                "} else if (atom_elem == 'CA' && atom_resn != 'GLY'){ \n return '"
+                + "#c0fac9"  # for GLY, don't color the CA green but instead keep it white/red (Frank von Delft: it should arguably not be treated as "backbone", because it's vulnerable to a single-bond change)
                 + "' \n "
             )
             start = False
