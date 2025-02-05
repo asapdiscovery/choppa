@@ -54,6 +54,7 @@ class PublicationView:
         complex,
         complex_rdkit,
         fitness_threshold,
+        override_backbone,
         output_session_file="out.pse",
     ):
         self.fitness_dict = filled_aligned_fitness_dict
@@ -64,6 +65,7 @@ class PublicationView:
 
         # get the PDB file as a string from RDKit
         self.complex_pdb_str = Chem.MolToPDBBlock(complex_rdkit)
+        self.override_backbone = override_backbone
 
     def pymol_start_session(self):
         """
@@ -178,6 +180,15 @@ class PublicationView:
 
         for fitness_degree_name, color in mutability_color_dict.items():
             p.cmd.set("surface_color", color, f"({fitness_degree_name})")
+
+        if self.override_backbone:
+            # color the residues' backbone surfaces a light green instead; overrides the previous coloring.
+            p.cmd.set("surface_color", "palegreen", "backbone and not resn GLY")
+
+            # don't color GLY CA, see note in InteractiveView() below.
+            p.cmd.set("surface_color", "palegreen", "backbone and name N")
+            p.cmd.set("surface_color", "palegreen", "backbone and name C")
+            p.cmd.set("surface_color", "palegreen", "backbone and name O")
 
         return mutability_color_dict
 

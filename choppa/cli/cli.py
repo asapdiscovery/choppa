@@ -152,6 +152,7 @@ def render(
         complex,
         complex_rdkit,
         fitness_threshold=fitness_threshold,
+        override_backbone=override_backbone,
         output_session_file=outfile_publication,
     ).render()
 
